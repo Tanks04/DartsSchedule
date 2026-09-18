@@ -85,16 +85,17 @@ export default function Home() {
 
   useEffect(() => {
     if (!supabase) return;
+    const client = supabase;
     void loadData();
-    supabase.auth.getSession().then(async ({ data: auth }) => {
+    client.auth.getSession().then(async ({ data: auth }) => {
       const email = auth.session?.user.email ?? "";
       setSessionEmail(email);
       if (auth.session) {
-        const { data: role } = await supabase.from("editors").select("user_id").eq("user_id", auth.session.user.id).maybeSingle();
+        const { data: role } = await client.from("editors").select("user_id").eq("user_id", auth.session.user.id).maybeSingle();
         setEditor(Boolean(role));
       }
     });
-    const { data: listener } = supabase.auth.onAuthStateChange(() => void loadData());
+    const { data: listener } = client.auth.onAuthStateChange(() => void loadData());
     return () => listener.subscription.unsubscribe();
   }, [loadData]);
 

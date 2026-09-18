@@ -10,8 +10,8 @@ Javni raspored pikado ekipa i pregled zauzetosti lokacija. Svi mogu čitati poda
    - Project URL
    - Publishable key (ili legacy `anon public` key)
 4. U **Authentication → URL Configuration** postavite:
-   - Site URL: `https://tanks04.github.io/DartsScheduler/`
-   - Redirect URL: `https://tanks04.github.io/DartsScheduler/**`
+     - Site URL: `https://tanks04.github.io/DartsSchedule/`
+     - Redirect URL: `https://tanks04.github.io/DartsSchedule/**`
 
 ## 2. Prvi urednik
 
