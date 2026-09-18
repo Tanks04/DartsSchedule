@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
-import { actualVenue, dateKey, formatDate, seedData, type Competition, type Match, type SchedulerData, type Team, type Venue } from "@/lib/darts-data";
+import { actualVenue, dateKey, formatDate, seedData, type Club, type Competition, type Match, type SchedulerData, type Team, type Venue } from "@/lib/darts-data";
 
-type AppRole = "viewer" | "captain" | "admin";
+type AppRole = "viewer" | "captain" | "club_manager" | "admin";
 type Captain = { email: string; user_id: string | null; team_id: string; team_name: string };
+type ClubManager = { email: string; user_id: string | null; club_id: string; club_name: string };
 const prefLeague = "dartsScheduler.defaultCompetition";
 const prefTeam = "dartsScheduler.defaultTeam";
 
@@ -26,6 +27,7 @@ export default function Home() {
   const [venueId, setVenueId] = useState("");
   const [role, setRole] = useState<AppRole>("viewer");
   const [editableTeams, setEditableTeams] = useState<string[]>([]);
+  const [managedClubIds, setManagedClubIds] = useState<string[]>([]);
   const [sessionEmail, setSessionEmail] = useState("");
   const [notice, setNotice] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
@@ -33,12 +35,13 @@ export default function Home() {
   const [captainsOpen, setCaptainsOpen] = useState(false);
   const [editing, setEditing] = useState<Match | null>(null);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
   const admin = role === "admin";
 
   const loadData = useCallback(async () => {
     if (!supabase) return;
     setLoading(true);
-    const [seasonsR, competitionsR, venuesR, teamsR, membershipR, matchesR, changesR] = await Promise.all([
+    const [seasonsR, competitionsR, venuesR, teamsR, membershipR, matchesR, changesR, clubsR, clubVenuesR] = await Promise.all([
       supabase.from("seasons").select("*").order("name", { ascending: false }),
       supabase.from("competitions").select("*").order("name"),
       supabase.from("venues").select("*").order("name"),
@@ -46,41 +49,48 @@ export default function Home() {
       supabase.from("competition_teams").select("competition_id,team_id"),
       supabase.from("matches").select("*").order("match_date").order("match_time"),
       supabase.from("schedule_changes").select("*").order("changed_at", { ascending: false }).limit(30),
+      supabase.from("clubs").select("*").order("name"),
+      supabase.from("club_venues").select("club_id,venue_id"),
     ]);
-    const missing = seasonsR.error || competitionsR.error || membershipR.error || changesR.error;
+    const missing = seasonsR.error || competitionsR.error || membershipR.error || changesR.error || clubsR.error || clubVenuesR.error;
     if (missing) {
-      setNotice("Baza još nije nadograđena na v2. Admin treba pokrenuti supabase/upgrade_v2.sql.");
+      setNotice("Baza još nije nadograđena na v3. Admin treba pokrenuti supabase/upgrade_v3_club_managers.sql.");
       setLoading(false); return;
     }
     const error = venuesR.error || teamsR.error || matchesR.error;
     if (error) { setNotice(`Podaci se ne mogu učitati: ${error.message}`); setLoading(false); return; }
     const venues: Venue[] = (venuesR.data ?? []).map(v => ({ id:v.id,name:v.name,address:v.address,mine:v.is_featured,contact:v.contact_name,phone:v.phone,email:v.email,map:v.map_url,note:v.note }));
     const venueNames = new Map(venues.map(v => [v.id,v.name]));
+    const clubVenueRows = clubVenuesR.data ?? [];
+    const clubs: Club[] = (clubsR.data ?? []).map(c => ({ id:c.id,name:c.name,contact:c.contact_name,phone:c.phone,email:c.email,note:c.note,venueIds:clubVenueRows.filter(x=>x.club_id===c.id).map(x=>x.venue_id) }));
+    const clubNames = new Map(clubs.map(c => [c.id,c.name]));
     const memberships = membershipR.data ?? [];
-    const teams: Team[] = (teamsR.data ?? []).map(t => ({ id:t.id,name:t.name,club:t.club_name,defaultVenueId:t.default_venue_id ?? "",defaultVenue:venueNames.get(t.default_venue_id) ?? "",contact:t.contact_name,phone:t.phone,email:t.email,note:t.note,competitionIds:memberships.filter(m=>m.team_id===t.id).map(m=>m.competition_id) }));
+    const teams: Team[] = (teamsR.data ?? []).map(t => ({ id:t.id,name:t.name,clubId:t.club_id??"",club:clubNames.get(t.club_id)??t.club_name,defaultVenueId:t.default_venue_id ?? "",defaultVenue:venueNames.get(t.default_venue_id) ?? "",contact:t.contact_name,phone:t.phone,email:t.email,note:t.note,competitionIds:memberships.filter(m=>m.team_id===t.id).map(m=>m.competition_id) }));
     const teamNames = new Map(teams.map(t => [t.id,t.name]));
     const competitions: Competition[] = (competitionsR.data ?? []).map(c => ({ id:c.id,seasonId:c.season_id,name:c.name,externalId:c.external_id }));
     const competitionNames = new Map(competitions.map(c => [c.id,c.name]));
     const matches: Match[] = (matchesR.data ?? []).map(m => ({ id:m.id,date:m.match_date,time:String(m.match_time ?? "").slice(0,5),homeId:m.home_team_id,awayId:m.away_team_id,home:teamNames.get(m.home_team_id) ?? "Nepoznata ekipa",away:teamNames.get(m.away_team_id) ?? "Nepoznata ekipa",venueId:m.venue_id ?? "",venue:venueNames.get(m.venue_id) ?? "",competitionId:m.competition_id ?? "",competition:competitionNames.get(m.competition_id) ?? m.league ?? "",round:m.round_name,note:m.note }));
     const matchMap = new Map(matches.map(m => [m.id,m]));
     const changes = (changesR.data ?? []).map(c => { const m=matchMap.get(c.match_id); return { id:c.id,matchId:c.match_id,changedAt:c.changed_at,changedBy:c.changed_by,oldDate:c.old_date,newDate:c.new_date,oldTime:String(c.old_time??"").slice(0,5),newTime:String(c.new_time??"").slice(0,5),competition:m?.competition??"",home:m?.home??"",away:m?.away??"" }; });
-    setData({ seasons:(seasonsR.data??[]).map(s=>({id:s.id,name:s.name,active:s.is_active})),competitions,venues,teams,matches,changes });
+    setData({ seasons:(seasonsR.data??[]).map(s=>({id:s.id,name:s.name,active:s.is_active})),competitions,clubs,venues,teams,matches,changes });
     setLoading(false);
   }, []);
 
   const syncAuth = useCallback(async (session: { user: { email?: string } } | null) => {
     if (!supabase) return;
     setSessionEmail(session?.user.email ?? "");
-    if (!session) { setRole("viewer"); setEditableTeams([]); return; }
+    if (!session) { setRole("viewer"); setEditableTeams([]); setManagedClubIds([]); return; }
     const roleR = await supabase.rpc("current_app_role");
     if (roleR.error) { setRole("viewer"); setNotice("Prijavljeni ste, ali prava nisu aktivna. Pokrenite upgrade_v2.sql u Supabaseu."); return; }
-    const nextRole = roleR.data === "admin" ? "admin" : roleR.data === "captain" ? "captain" : "viewer";
-    setRole(nextRole);
-    if (nextRole === "captain") {
-      const email = session.user.email ?? "";
-      const r = await supabase.from("team_editors").select("team_id").ilike("email", email);
-      setEditableTeams((r.data ?? []).map(x => x.team_id));
-    } else setEditableTeams([]);
+    const email = session.user.email ?? "";
+    const [teamsR,clubsR]=await Promise.all([
+      supabase.from("team_editors").select("team_id").ilike("email",email),
+      supabase.from("club_managers").select("club_id").ilike("email",email),
+    ]);
+    if(clubsR.error){setNotice("Prava voditelja kluba nisu dostupna. Pokrenite upgrade_v3_club_managers.sql u Supabaseu.");}
+    const teamIds=(teamsR.data??[]).map(x=>x.team_id);const clubIds=(clubsR.data??[]).map(x=>x.club_id);
+    setEditableTeams(teamIds);setManagedClubIds(clubIds);
+    setRole(roleR.data==="admin"?"admin":clubIds.length?"club_manager":teamIds.length||roleR.data==="captain"?"captain":"viewer");
   }, []);
 
   useEffect(() => {
@@ -108,26 +118,28 @@ export default function Home() {
   const today=dateKey(new Date());
   const todayMatches=venueMatches.filter(m=>m.date===today);
   const days=Array.from({length:8},(_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+i);const key=dateKey(d);return{key,d,matches:venueMatches.filter(m=>m.date===key)}});
-  const canEdit=(m:Match)=>admin||editableTeams.includes(m.homeId)||editableTeams.includes(m.awayId);
+  const canEditTeam=(t?:Team)=>!!t&&(admin||editableTeams.includes(t.id)||managedClubIds.includes(t.clubId));
+  const canEdit=(m:Match)=>canEditTeam(data.teams.find(t=>t.id===m.homeId))||canEditTeam(data.teams.find(t=>t.id===m.awayId));
+  const canEditSelectedVenue=!!selectedVenue&&(admin||data.clubs.some(c=>managedClubIds.includes(c.id)&&c.venueIds.includes(selectedVenue.id)));
   function selectCompetition(id:string){setCompetitionId(id);localStorage.setItem(prefLeague,id);const first=data.teams.find(t=>t.competitionIds.includes(id));if(first){setTeamId(first.id);localStorage.setItem(prefTeam,first.id);}}
   function selectTeam(id:string){setTeamId(id);localStorage.setItem(prefTeam,id);}
 
   return <main className="app-shell">
     <header className="topbar"><div className="brand"><span>DS</span><div><strong>DartsScheduler</strong><small>raspored ekipa i lokacija</small></div></div><div className="top-actions">
       <Button variant="ghost" onClick={()=>setSettingsOpen(true)}><Settings/> Postavke</Button>
-      {admin&&<Button variant="outline" onClick={()=>setCaptainsOpen(true)}><UserCog/> Kapetani</Button>}
+      {admin&&<Button variant="outline" onClick={()=>setCaptainsOpen(true)}><UserCog/> Ovlasti</Button>}
       {sessionEmail?<Button variant="ghost" onClick={()=>supabase?.auth.signOut()}><LogOut/> Odjava</Button>:<Button variant="ghost" onClick={()=>setLoginOpen(true)}><LogIn/> Prijava</Button>}
     </div></header>
     {notice&&<button className="notice" onClick={()=>setNotice("")}>{notice}</button>}
     {!supabaseConfigured&&<div className="setup-note">Demo prikaz — Supabase još nije povezan.</div>}
     <div className="filters"><label>Sezona<NativeSelect value={data.competitions.find(c=>c.id===competitionId)?.seasonId??""} disabled>{data.seasons.map(s=><NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}</NativeSelect></label><label>Liga<NativeSelect value={competitionId} onChange={e=>selectCompetition(e.target.value)}>{data.competitions.map(c=><NativeSelectOption key={c.id} value={c.id}>{c.name}</NativeSelectOption>)}</NativeSelect></label><label>Tim<NativeSelect value={teamId} onChange={e=>selectTeam(e.target.value)}>{leagueTeams.map(t=><NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}</NativeSelect></label></div>
     <div className="dashboard">
-      <section className="panel"><div className="panel-head"><div><span className="eyebrow"><Users/> Raspored ekipe</span><h1>{selectedTeam?.name??"Nema ekipa"}</h1></div><div className="panel-tools"><span className="role-pill">{admin?"ADMIN":role==="captain"?"KAPETAN":"PREGLED"}</span>{selectedTeam&&(admin||editableTeams.includes(selectedTeam.id))&&<Button variant="ghost" size="icon" title="Uredi podatke tima" onClick={()=>setEditingTeam(selectedTeam)}><Edit3/></Button>}</div></div>
+      <section className="panel"><div className="panel-head"><div><span className="eyebrow"><Users/> Raspored ekipe</span><h1>{selectedTeam?.name??"Nema ekipa"}</h1></div><div className="panel-tools"><span className="role-pill">{admin?"ADMIN":role==="club_manager"?"VODITELJ KLUBA":role==="captain"?"KAPETAN":"PREGLED"}</span>{canEditTeam(selectedTeam)&&<Button variant="ghost" size="icon" title="Uredi podatke tima" onClick={()=>setEditingTeam(selectedTeam!)}><Edit3/></Button>}</div></div>
         {selectedTeam&&<p className="meta">{selectedTeam.club||"Klub nije upisan"} · <MapPin/>{selectedTeam.defaultVenue||"Lokacija nije upisana"}</p>}
         <div className="section-label"><span>Utakmice</span><b>{teamMatches.length}</b></div><div className="match-list">{loading?<Empty>Učitavanje…</Empty>:teamMatches.length?teamMatches.map(m=><MatchRow key={m.id} match={m} venue={actualVenue(m,data.teams)} editable={canEdit(m)} onEdit={()=>setEditing(m)}/>):<Empty>Za ovaj tim nema utakmica.</Empty>}</div>
         {!!data.changes.filter(c=>c.competition===data.competitions.find(x=>x.id===competitionId)?.name).length&&<><div className="section-label"><span><Bell/> Nedavne promjene</span></div><div className="changes">{data.changes.filter(c=>c.competition===data.competitions.find(x=>x.id===competitionId)?.name).slice(0,5).map(c=><div key={c.id}><b>{c.home} — {c.away}</b><span>{formatDate(c.oldDate)} {c.oldTime} → {formatDate(c.newDate)} {c.newTime}</span></div>)}</div></>}
       </section>
-      <section className="panel"><div className="panel-head"><div><span className="eyebrow"><MapPin/> Zauzetost lokacije · sve lige</span><h2>{selectedVenue?.name??"Nema lokacija"}</h2></div><NativeSelect value={venueId} onChange={e=>setVenueId(e.target.value)}>{data.venues.slice().sort((a,b)=>Number(b.mine)-Number(a.mine)||a.name.localeCompare(b.name)).map(v=><NativeSelectOption key={v.id} value={v.id}>{v.mine?"★ ":""}{v.name}</NativeSelectOption>)}</NativeSelect></div>
+      <section className="panel"><div className="panel-head"><div><span className="eyebrow"><MapPin/> Zauzetost lokacije · sve lige</span><h2>{selectedVenue?.name??"Nema lokacija"}</h2></div><div className="panel-tools"><NativeSelect value={venueId} onChange={e=>setVenueId(e.target.value)}>{data.venues.slice().sort((a,b)=>Number(b.mine)-Number(a.mine)||a.name.localeCompare(b.name)).map(v=><NativeSelectOption key={v.id} value={v.id}>{v.mine?"★ ":""}{v.name}</NativeSelectOption>)}</NativeSelect>{canEditSelectedVenue&&<Button variant="ghost" size="icon" title="Uredi lokaciju" onClick={()=>setEditingVenue(selectedVenue!)}><Edit3/></Button>}</div></div>
         {selectedVenue&&<p className="meta"><MapPin/>{selectedVenue.address}{selectedVenue.mine&&<b className="mine">MOJE MJESTO</b>}</p>}
         <div className={`today ${todayMatches.length?"busy":"free"}`}><div><small>Danas</small><Status busy={todayMatches.length>0}/></div><div>{todayMatches.length?todayMatches.map(m=><span key={m.id}>{m.time||"—"} · {m.home} — {m.away}<small>{m.competition}</small></span>):<span>Nema utakmica na ovoj lokaciji.</span>}</div></div>
         <div className="section-label"><span>Sljedećih 7 dana</span></div><div className="week">{days.map(day=><div className="day" key={day.key}><div><b>{new Intl.DateTimeFormat("hr-HR",{weekday:"short"}).format(day.d)}</b><span>{formatDate(day.key)}</span></div><Status busy={day.matches.length>0}/><div>{day.matches.length?day.matches.map(m=><span key={m.id}>{m.time||"—"} · {m.home} — {m.away}<small>{m.competition}</small></span>):"—"}</div></div>)}</div>
@@ -136,8 +148,9 @@ export default function Home() {
     <LoginDialog open={loginOpen} onClose={()=>setLoginOpen(false)} onNotice={setNotice}/>
     <SettingsDialog open={settingsOpen} onClose={()=>setSettingsOpen(false)} competitions={data.competitions} teams={data.teams} competitionId={competitionId} teamId={teamId} onCompetition={selectCompetition} onTeam={selectTeam}/>
     <EditMatchDialog match={editing} venues={data.venues} onClose={()=>setEditing(null)} onSaved={async()=>{setEditing(null);setNotice("Termin je izmijenjen i promjena je vidljiva svima.");await loadData();}} onNotice={setNotice}/>
-    <EditTeamDialog team={editingTeam} venues={data.venues} onClose={()=>setEditingTeam(null)} onSaved={async()=>{setEditingTeam(null);setNotice("Podaci tima su spremljeni.");await loadData();}} onNotice={setNotice}/>
-    <CaptainsDialog open={captainsOpen} onClose={()=>setCaptainsOpen(false)} teams={data.teams} onNotice={setNotice}/>
+    <EditTeamDialog team={editingTeam} venues={data.venues} clubs={data.clubs} admin={admin} onClose={()=>setEditingTeam(null)} onSaved={async()=>{setEditingTeam(null);setNotice("Podaci tima su spremljeni.");await loadData();}} onNotice={setNotice}/>
+    <EditVenueDialog venue={editingVenue} onClose={()=>setEditingVenue(null)} onSaved={async()=>{setEditingVenue(null);setNotice("Podaci lokacije su spremljeni.");await loadData();}} onNotice={setNotice}/>
+    <CaptainsDialog open={captainsOpen} onClose={()=>setCaptainsOpen(false)} teams={data.teams} clubs={data.clubs} onNotice={setNotice}/>
   </main>;
 }
 
@@ -157,17 +170,27 @@ function EditMatchDialog({match,venues,onClose,onSaved,onNotice}:{match:Match|nu
   async function save(){if(!supabase||!match)return;const{error}=await supabase.from("matches").update({match_date:date,match_time:time||null,venue_id:venueId||null}).eq("id",match.id);if(error)onNotice(`Izmjena nije spremljena: ${error.message}`);else onSaved();}
   return <Dialog open={!!match} onOpenChange={v=>!v&&onClose()}><DialogContent><DialogHeader><DialogTitle>Izmijeni utakmicu</DialogTitle><DialogDescription>{match?.home} — {match?.away}. Promjenu će vidjeti svi pratitelji lige i lokacije.</DialogDescription></DialogHeader><div className="form-grid"><label>Datum<Input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label><label>Vrijeme<Input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label><label className="wide">Lokacija<NativeSelect value={venueId} onChange={e=>setVenueId(e.target.value)}><NativeSelectOption value="">Zadana lokacija domaćina</NativeSelectOption>{venues.map(v=><NativeSelectOption key={v.id} value={v.id}>{v.name}</NativeSelectOption>)}</NativeSelect></label></div><DialogFooter><Button variant="outline" onClick={onClose}>Odustani</Button><Button className="red-button" onClick={()=>void save()}>Spremi za sve</Button></DialogFooter></DialogContent></Dialog>;
 }
-function EditTeamDialog({team,venues,onClose,onSaved,onNotice}:{team:Team|null;venues:Venue[];onClose:()=>void;onSaved:()=>void;onNotice:(s:string)=>void}){
-  const[form,setForm]=useState({club:"",venueId:"",contact:"",phone:"",email:"",note:""});
-  useEffect(()=>{setForm({club:team?.club??"",venueId:team?.defaultVenueId??"",contact:team?.contact??"",phone:team?.phone??"",email:team?.email??"",note:team?.note??""});},[team]);
-  async function save(){if(!supabase||!team)return;const{error}=await supabase.from("teams").update({club_name:form.club,default_venue_id:form.venueId||null,contact_name:form.contact,phone:form.phone,email:form.email,note:form.note}).eq("id",team.id);if(error)onNotice(`Podaci nisu spremljeni: ${error.message}`);else onSaved();}
-  return <Dialog open={!!team} onOpenChange={v=>!v&&onClose()}><DialogContent><DialogHeader><DialogTitle>Uredi tim · {team?.name}</DialogTitle><DialogDescription>Kapetan može održavati kontakt i zadanu domaću lokaciju svojeg tima.</DialogDescription></DialogHeader><div className="form-grid"><label>Klub<Input value={form.club} onChange={e=>setForm({...form,club:e.target.value})}/></label><label>Kontakt osoba<Input value={form.contact} onChange={e=>setForm({...form,contact:e.target.value})}/></label><label>Telefon<Input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label>E-mail<Input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label className="wide">Zadana domaća lokacija<NativeSelect value={form.venueId} onChange={e=>setForm({...form,venueId:e.target.value})}><NativeSelectOption value="">Nije određena</NativeSelectOption>{venues.map(v=><NativeSelectOption key={v.id} value={v.id}>{v.name}</NativeSelectOption>)}</NativeSelect></label><label className="wide">Napomena<Input value={form.note} onChange={e=>setForm({...form,note:e.target.value})}/></label></div><DialogFooter><Button variant="outline" onClick={onClose}>Odustani</Button><Button className="red-button" onClick={()=>void save()}>Spremi</Button></DialogFooter></DialogContent></Dialog>;
+function EditTeamDialog({team,venues,clubs,admin,onClose,onSaved,onNotice}:{team:Team|null;venues:Venue[];clubs:Club[];admin:boolean;onClose:()=>void;onSaved:()=>void;onNotice:(s:string)=>void}){
+  const[form,setForm]=useState({clubId:"",venueId:"",contact:"",phone:"",email:"",note:""});
+  useEffect(()=>{setForm({clubId:team?.clubId??"",venueId:team?.defaultVenueId??"",contact:team?.contact??"",phone:team?.phone??"",email:team?.email??"",note:team?.note??""});},[team]);
+  async function save(){if(!supabase||!team)return;const club=clubs.find(c=>c.id===form.clubId);const{error}=await supabase.from("teams").update({club_id:form.clubId||null,club_name:club?.name??team.club,default_venue_id:form.venueId||null,contact_name:form.contact,phone:form.phone,email:form.email,note:form.note}).eq("id",team.id);if(error)onNotice(`Podaci nisu spremljeni: ${error.message}`);else onSaved();}
+  return <Dialog open={!!team} onOpenChange={v=>!v&&onClose()}><DialogContent><DialogHeader><DialogTitle>Uredi tim · {team?.name}</DialogTitle><DialogDescription>Kapetan ili voditelj kluba može održavati kontakt i domaću lokaciju. Samo admin može premjestiti tim u drugi klub.</DialogDescription></DialogHeader><div className="form-grid"><label>Klub<NativeSelect disabled={!admin} value={form.clubId} onChange={e=>setForm({...form,clubId:e.target.value})}><NativeSelectOption value="">Nije određen</NativeSelectOption>{clubs.map(c=><NativeSelectOption key={c.id} value={c.id}>{c.name}</NativeSelectOption>)}</NativeSelect></label><label>Kontakt osoba<Input value={form.contact} onChange={e=>setForm({...form,contact:e.target.value})}/></label><label>Telefon<Input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label>E-mail<Input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label className="wide">Zadana domaća lokacija<NativeSelect value={form.venueId} onChange={e=>setForm({...form,venueId:e.target.value})}><NativeSelectOption value="">Nije određena</NativeSelectOption>{venues.map(v=><NativeSelectOption key={v.id} value={v.id}>{v.name}</NativeSelectOption>)}</NativeSelect></label><label className="wide">Napomena<Input value={form.note} onChange={e=>setForm({...form,note:e.target.value})}/></label></div><DialogFooter><Button variant="outline" onClick={onClose}>Odustani</Button><Button className="red-button" onClick={()=>void save()}>Spremi</Button></DialogFooter></DialogContent></Dialog>;
 }
-function CaptainsDialog({open,onClose,teams,onNotice}:{open:boolean;onClose:()=>void;teams:Team[];onNotice:(s:string)=>void}){
-  const[email,setEmail]=useState("");const[teamId,setTeamId]=useState("");const[captains,setCaptains]=useState<Captain[]>([]);const[busy,setBusy]=useState(false);
-  const load=useCallback(async()=>{if(!supabase)return;const r=await supabase.from("team_editors").select("team_id,email,app_users(user_id)");if(r.error){onNotice(r.error.message);return;}setCaptains((r.data??[]).map((x:any)=>({team_id:x.team_id,email:x.email,user_id:x.app_users?.user_id??null,team_name:teams.find(t=>t.id===x.team_id)?.name??"Nepoznat tim"})));},[teams,onNotice]);
-  useEffect(()=>{if(open){setTeamId(teams[0]?.id??"");void load();}},[open,teams,load]);
-  async function add(){if(!supabase||!email||!teamId)return;setBusy(true);const normalized=email.trim().toLowerCase();const u=await supabase.from("app_users").upsert({email:normalized,role:"captain"},{onConflict:"email",ignoreDuplicates:true});if(u.error){onNotice(u.error.message);setBusy(false);return;}const a=await supabase.from("team_editors").upsert({team_id:teamId,email:normalized},{onConflict:"team_id,email",ignoreDuplicates:true});if(a.error){onNotice(a.error.message);setBusy(false);return;}const mail=await supabase.auth.signInWithOtp({email:normalized,options:{emailRedirectTo:window.location.origin+window.location.pathname}});onNotice(mail.error?`Kapetan je dodan, ali poruka nije poslana: ${mail.error.message}`:`Poziv za kapetana poslan je na ${normalized}.`);setEmail("");await load();setBusy(false);}
-  async function remove(c:Captain){if(!supabase)return;const r=await supabase.from("team_editors").delete().eq("team_id",c.team_id).eq("email",c.email);if(r.error)onNotice(r.error.message);else{onNotice("Ovlasti kapetana su uklonjene.");await load();}}
-  return <Dialog open={open} onOpenChange={v=>!v&&onClose()}><DialogContent><DialogHeader><DialogTitle>Kapetani timova</DialogTitle><DialogDescription>Najviše dva kapetana po timu. Mogu mijenjati samo utakmice svojeg tima.</DialogDescription></DialogHeader><div className="captain-add"><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="kapetan@primjer.hr"/><NativeSelect value={teamId} onChange={e=>setTeamId(e.target.value)}>{teams.map(t=><NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}</NativeSelect><Button disabled={busy||!email||!teamId} className="red-button" onClick={()=>void add()}><ShieldCheck/> Dodaj</Button></div><div className="user-list">{captains.map(c=><div className="managed-user" key={`${c.team_id}-${c.email}`}><div><b>{c.email}</b><span>{c.team_name} · {c.user_id?"POTVRĐEN":"ČEKA PRIJAVU"}</span></div><Button variant="ghost" onClick={()=>void remove(c)}>Ukloni</Button></div>)}</div><DialogFooter><Button variant="outline" onClick={onClose}>Zatvori</Button></DialogFooter></DialogContent></Dialog>;
+function EditVenueDialog({venue,onClose,onSaved,onNotice}:{venue:Venue|null;onClose:()=>void;onSaved:()=>void;onNotice:(s:string)=>void}){
+  const[form,setForm]=useState({address:"",contact:"",phone:"",email:"",map:"",note:""});
+  useEffect(()=>{setForm({address:venue?.address??"",contact:venue?.contact??"",phone:venue?.phone??"",email:venue?.email??"",map:venue?.map??"",note:venue?.note??""});},[venue]);
+  async function save(){if(!supabase||!venue)return;const{error}=await supabase.from("venues").update({address:form.address,contact_name:form.contact,phone:form.phone,email:form.email,map_url:form.map,note:form.note}).eq("id",venue.id);if(error)onNotice(`Lokacija nije spremljena: ${error.message}`);else onSaved();}
+  return <Dialog open={!!venue} onOpenChange={v=>!v&&onClose()}><DialogContent><DialogHeader><DialogTitle>Uredi lokaciju · {venue?.name}</DialogTitle><DialogDescription>Promjene adrese i kontakta odmah su vidljive svim ekipama koje koriste ovu lokaciju.</DialogDescription></DialogHeader><div className="form-grid"><label className="wide">Adresa<Input value={form.address} onChange={e=>setForm({...form,address:e.target.value})}/></label><label>Kontakt osoba<Input value={form.contact} onChange={e=>setForm({...form,contact:e.target.value})}/></label><label>Telefon<Input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label>E-mail<Input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label>Google Maps poveznica<Input value={form.map} onChange={e=>setForm({...form,map:e.target.value})}/></label><label className="wide">Napomena<Input value={form.note} onChange={e=>setForm({...form,note:e.target.value})}/></label></div><DialogFooter><Button variant="outline" onClick={onClose}>Odustani</Button><Button className="red-button" onClick={()=>void save()}>Spremi</Button></DialogFooter></DialogContent></Dialog>;
+}
+function CaptainsDialog({open,onClose,teams,clubs,onNotice}:{open:boolean;onClose:()=>void;teams:Team[];clubs:Club[];onNotice:(s:string)=>void}){
+  const[email,setEmail]=useState("");const[teamId,setTeamId]=useState("");const[managerEmail,setManagerEmail]=useState("");const[clubId,setClubId]=useState("");const[captains,setCaptains]=useState<Captain[]>([]);const[managers,setManagers]=useState<ClubManager[]>([]);const[busy,setBusy]=useState(false);
+  const load=useCallback(async()=>{if(!supabase)return;const[c,m]=await Promise.all([supabase.from("team_editors").select("team_id,email,app_users(user_id)"),supabase.from("club_managers").select("club_id,email,app_users(user_id)")]);if(c.error||m.error){onNotice(c.error?.message??m.error?.message??"");return;}setCaptains((c.data??[]).map((x:any)=>({team_id:x.team_id,email:x.email,user_id:x.app_users?.user_id??null,team_name:teams.find(t=>t.id===x.team_id)?.name??"Nepoznat tim"})));setManagers((m.data??[]).map((x:any)=>({club_id:x.club_id,email:x.email,user_id:x.app_users?.user_id??null,club_name:clubs.find(k=>k.id===x.club_id)?.name??"Nepoznat klub"})));},[teams,clubs,onNotice]);
+  useEffect(()=>{if(open){setTeamId(teams[0]?.id??"");setClubId(clubs[0]?.id??"");void load();}},[open,teams,clubs,load]);
+  async function invite(targetEmail:string,roleName:"captain"|"club_manager"){if(!supabase)return false;const normalized=targetEmail.trim().toLowerCase();const u=await supabase.from("app_users").upsert({email:normalized,role:roleName},{onConflict:"email",ignoreDuplicates:true});if(u.error){onNotice(u.error.message);return false;}return true;}
+  async function sendMail(targetEmail:string,label:string){if(!supabase)return;const normalized=targetEmail.trim().toLowerCase();const mail=await supabase.auth.signInWithOtp({email:normalized,options:{emailRedirectTo:window.location.origin+window.location.pathname}});onNotice(mail.error?`${label} je dodan, ali poruka nije poslana: ${mail.error.message}`:`Poziv je poslan na ${normalized}.`);}
+  async function addCaptain(){if(!supabase||!email||!teamId)return;setBusy(true);const normalized=email.trim().toLowerCase();if(await invite(normalized,"captain")){const a=await supabase.from("team_editors").upsert({team_id:teamId,email:normalized},{onConflict:"team_id,email",ignoreDuplicates:true});if(a.error)onNotice(a.error.message);else{await sendMail(normalized,"Kapetan");setEmail("");await load();}}setBusy(false);}
+  async function addManager(){if(!supabase||!managerEmail||!clubId)return;setBusy(true);const normalized=managerEmail.trim().toLowerCase();if(await invite(normalized,"club_manager")){const a=await supabase.from("club_managers").upsert({club_id:clubId,email:normalized},{onConflict:"club_id,email",ignoreDuplicates:true});if(a.error)onNotice(a.error.message);else{await sendMail(normalized,"Voditelj kluba");setManagerEmail("");await load();}}setBusy(false);}
+  async function removeCaptain(c:Captain){if(!supabase)return;const r=await supabase.from("team_editors").delete().eq("team_id",c.team_id).eq("email",c.email);if(r.error)onNotice(r.error.message);else{onNotice("Ovlasti kapetana su uklonjene.");await load();}}
+  async function removeManager(m:ClubManager){if(!supabase)return;const r=await supabase.from("club_managers").delete().eq("club_id",m.club_id).eq("email",m.email);if(r.error)onNotice(r.error.message);else{onNotice("Ovlasti voditelja kluba su uklonjene.");await load();}}
+  return <Dialog open={open} onOpenChange={v=>!v&&onClose()}><DialogContent className="access-dialog"><DialogHeader><DialogTitle>Ovlasti korisnika</DialogTitle><DialogDescription>Voditelj uređuje sve timove i lokacije kluba. Kapetan uređuje samo svoj tim i njegove utakmice.</DialogDescription></DialogHeader><section className="access-section"><h3>Voditelji klubova</h3><div className="captain-add"><Input type="email" value={managerEmail} onChange={e=>setManagerEmail(e.target.value)} placeholder="voditelj@primjer.hr"/><NativeSelect value={clubId} onChange={e=>setClubId(e.target.value)}>{clubs.map(c=><NativeSelectOption key={c.id} value={c.id}>{c.name}</NativeSelectOption>)}</NativeSelect><Button disabled={busy||!managerEmail||!clubId} className="red-button" onClick={()=>void addManager()}><ShieldCheck/> Dodaj</Button></div><div className="user-list">{managers.map(m=><div className="managed-user" key={`${m.club_id}-${m.email}`}><div><b>{m.email}</b><span>{m.club_name} · {m.user_id?"POTVRĐEN":"ČEKA PRIJAVU"}</span></div><Button variant="ghost" onClick={()=>void removeManager(m)}>Ukloni</Button></div>)}</div></section><section className="access-section"><h3>Kapetani timova</h3><div className="captain-add"><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="kapetan@primjer.hr"/><NativeSelect value={teamId} onChange={e=>setTeamId(e.target.value)}>{teams.map(t=><NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}</NativeSelect><Button disabled={busy||!email||!teamId} className="red-button" onClick={()=>void addCaptain()}><ShieldCheck/> Dodaj</Button></div><div className="user-list">{captains.map(c=><div className="managed-user" key={`${c.team_id}-${c.email}`}><div><b>{c.email}</b><span>{c.team_name} · {c.user_id?"POTVRĐEN":"ČEKA PRIJAVU"}</span></div><Button variant="ghost" onClick={()=>void removeCaptain(c)}>Ukloni</Button></div>)}</div></section><DialogFooter><Button variant="outline" onClick={onClose}>Zatvori</Button></DialogFooter></DialogContent></Dialog>;
 }
