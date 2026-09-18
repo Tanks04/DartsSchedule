@@ -79,6 +79,12 @@ export default function Home() {
     const teams: Team[] = (teamsResult.data ?? []).map((t) => ({ id: t.id, name: t.name, club: t.club_name, defaultVenue: venueById.get(t.default_venue_id) ?? "", contact: t.contact_name, phone: t.phone, email: t.email, note: t.note }));
     const teamById = new Map(teams.map((t) => [t.id, t.name]));
     const matches: Match[] = (matchesResult.data ?? []).map((m) => ({ id: m.id, date: m.match_date, time: String(m.match_time ?? "").slice(0, 5), home: teamById.get(m.home_team_id) ?? "Nepoznata ekipa", away: teamById.get(m.away_team_id) ?? "Nepoznata ekipa", venue: venueById.get(m.venue_id) ?? "", league: m.league, round: m.round_name, note: m.note }));
+    if (!venues.length && !teams.length && !matches.length) {
+      setData(seedData);
+      setNotice("Baza je još prazna — prikazani su početni klubovi i lokacije.");
+      setLoading(false);
+      return;
+    }
     setData({ venues, teams, matches });
     setLoading(false);
   }, []);
