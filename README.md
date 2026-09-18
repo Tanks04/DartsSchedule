@@ -1,43 +1,41 @@
 # DartsScheduler
 
-Javni raspored pikado ekipa i pregled zauzetosti lokacija. Svi mogu čitati podatke, a samo odobreni urednici mogu uvoziti Excel/CSV i mijenjati raspored.
+Javni raspored pikado liga, timova i zauzetosti lokacija. Posjetitelji biraju ligu i tim, a aplikacija taj početni izbor pamti na uređaju. Zauzetost lokacije uvijek se računa preko svih liga.
 
-## 1. Supabase
+## Objavljivanje ove nadogradnje
 
-1. Na <https://supabase.com> napravite novi projekt.
-2. Otvorite **SQL Editor**, zalijepite cijeli sadržaj datoteke `supabase/schema.sql` i pokrenite ga jednom.
-3. U **Project Settings → API** kopirajte:
-   - Project URL
-   - Publishable key (ili legacy `anon public` key)
-4. U **Authentication → URL Configuration** postavite:
-     - Site URL: `https://tanks04.github.io/DartsSchedule/`
-     - Redirect URL: `https://tanks04.github.io/DartsSchedule/**`
+1. U Supabaseu otvorite **SQL Editor**.
+2. Zalijepite cijeli sadržaj `supabase/upgrade_v2.sql` i kliknite **Run**. Ovaj korak daje vlasniku administratorska prava i uključuje lige, kapetane, prava i dnevnik promjena.
+3. Zatim u novom SQL upitu pokrenite `supabase/psgz_2026_27_seed.sql`. Uvozi 9 PSGZ liga, 98 timova i 1.232 utakmice za 2026./27.; sigurno ga je ponovno pokrenuti.
+4. Na GitHub prenesite izmijenjene datoteke i commitajte ih na `main`. Workflow će sam objaviti aplikaciju.
+5. Nakon objave odjavite se i ponovno prijavite jednokratnom poveznicom. U zaglavlju ćete vidjeti **Kapetani** i oznaku **ADMIN**.
 
-## 2. Prvi urednik
+Ako aplikacija javlja da baza nije nadograđena, SQL iz 2. koraka nije uspješno pokrenut. Sama zamjena `page.tsx` i CSS-a ne može dodijeliti administratorska prava.
 
-1. Objavite aplikaciju i kliknite **Urednik**.
-2. Upišite svoj e-mail i otvorite poveznicu koja stigne e-mailom.
-3. U Supabaseu otvorite **Authentication → Users** i kopirajte UUID tog korisnika.
-4. U SQL Editoru pokrenite:
+## Prava
 
-```sql
-insert into public.editors (user_id)
-values ('OVDJE-ZALIJEPITE-UUID');
-```
+- **Admin** uređuje sve podatke i dodjeljuje najviše dva kapetana po timu.
+- **Kapetan** uređuje kontakt i domaću lokaciju svojeg tima te utakmice u kojima taj tim sudjeluje.
+- **Gledatelj** samo čita.
 
-Ponovite samo za osobe koje smiju uređivati raspored.
+Promjena datuma, vremena ili lokacije utakmice globalna je i odmah utječe na raspored lige i zauzetost lokacije. Dnevnik promjena prikazuje zadnje izmjene.
 
-## 3. GitHub Pages
+## GitHub Pages
 
-1. Napravite GitHub repozitorij `DartsScheduler` i dodajte sadržaj ovog projekta.
-2. U repozitoriju otvorite **Settings → Secrets and variables → Actions → Variables**.
-3. Dodajte:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-4. U **Settings → Pages → Build and deployment** odaberite **GitHub Actions**.
-5. Push na granu `main` automatski pokreće objavu.
+Repozitorij: <https://github.com/Tanks04/DartsSchedule>
 
-`service_role` ključ se nikada ne stavlja u GitHub ni u web-aplikaciju.
+U **Settings → Secrets and variables → Actions → Variables** moraju postojati:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+U **Settings → Pages → Build and deployment** izvor mora biti **GitHub Actions**. `service_role` ključ se nikada ne stavlja u GitHub niti u web-aplikaciju.
+
+## PSGZ podaci
+
+Izvor rasporeda je službena stranica PSGZ-a. Datoteka `data/psgz-2026-27.json` sadrži izdvojene rasporede, a `scripts/build-psgz-seed.mjs` reproducibilno iz nje stvara SQL seed.
+
+Lokacije koje PSGZ raspored ne objavljuje ostaju prazne dok ih admin ili kapetan ne poveže s timom. Time se izbjegava pogrešan prikaz zauzetosti.
 
 ## Lokalni razvoj
 
