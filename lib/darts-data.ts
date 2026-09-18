@@ -1,12 +1,13 @@
 export type Season = { id: string; name: string; active: boolean };
 export type Competition = { id: string; seasonId: string; name: string; externalId: string };
+export type Club = { id: string; name: string; contact: string; phone: string; email: string; note: string; venueIds: string[] };
 export type Match = {
   id: string; date: string; time: string; homeId: string; awayId: string;
   home: string; away: string; venueId: string; venue: string;
   competitionId: string; competition: string; round: string; note: string;
 };
 export type Team = {
-  id: string; name: string; club: string; defaultVenueId: string; defaultVenue: string;
+  id: string; name: string; clubId: string; club: string; defaultVenueId: string; defaultVenue: string;
   contact: string; phone: string; email: string; note: string; competitionIds: string[];
 };
 export type Venue = {
@@ -20,7 +21,7 @@ export type Change = {
 };
 export type SchedulerData = {
   seasons: Season[]; competitions: Competition[]; matches: Match[];
-  teams: Team[]; venues: Venue[]; changes: Change[];
+  clubs: Club[]; teams: Team[]; venues: Venue[]; changes: Change[];
 };
 
 export const seedData: SchedulerData = {
@@ -30,9 +31,10 @@ export const seedData: SchedulerData = {
     "4. LIGA SKUPINA A", "4. LIGA SKUPINA B", "4. LIGA SKUPINA C", "KLASIČNA LIGA", "SENIORKE",
   ].map((name, i) => ({ id: `competition-${i + 1}`, seasonId: "season-2026", name, externalId: String(815 + i) })),
   matches: [], changes: [],
+  clubs: [{ id: "club-a1", name: "PK A1", contact: "Željko Žitnik", phone: "", email: "", note: "", venueIds: ["venue-a1"] }],
   teams: [
-    { id: "team-a1", name: "A1", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"] },
-    { id: "team-a1-otpisani", name: "A1 OTPISANI", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"] },
+    { id: "team-a1", name: "A1", clubId: "club-a1", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"] },
+    { id: "team-a1-otpisani", name: "A1 OTPISANI", clubId: "club-a1", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"] },
   ],
   venues: [{ id: "venue-a1", name: "A1 – Cirkovci 72", address: "Cirkovci 72", mine: true, contact: "", phone: "", email: "", map: "", note: "" }],
 };
