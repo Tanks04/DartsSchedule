@@ -20,4 +20,18 @@ for (const league of input) {
 }
 sql.push("commit;", "");
 fs.writeFileSync(new URL("../supabase/psgz_2026_27_seed.sql", import.meta.url), sql.join("\n"));
+const firstLeagueFinish = input.find((league) => league.externalId === "815");
+const finishSql = [
+  "-- Dopuna 1. LIGE, kola 19-26. Sigurna za ponovno pokretanje: ne mijenja postojeće utakmice.",
+  "-- Pokrenuti nakon supabase/psgz_2026_27_seed.sql ili ako aplikacija završava na 18. kolu.",
+  "begin;",
+];
+for (const game of firstLeagueFinish?.games.filter((g) => Number.parseInt(g.round, 10) >= 19) ?? []) {
+  const m = game.date.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})\.\s+(\d{1,2}:\d{2})/);
+  if (!m) continue;
+  const date = `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+  finishSql.push(`insert into public.matches(match_date,match_time,home_team_id,away_team_id,competition_id,external_event_id,league,round_name) select ${q(date)}::date,${q(m[4])}::time,h.id,a.id,c.id,${q(game.eventId)},'1. LIGA',${q(game.round)} from public.teams h,public.teams a,public.competitions c,public.seasons s where h.name=${q(game.home)} and a.name=${q(game.away)} and c.season_id=s.id and s.name='2026./27.' and c.external_id='815' on conflict(competition_id,external_event_id) where external_event_id<>'' do nothing;`);
+}
+finishSql.push("commit;", "");
+fs.writeFileSync(new URL("../supabase/psgz_1_liga_kola_19_26.sql", import.meta.url), finishSql.join("\n"));
 console.log(`${input.length} natjecanja, ${teams.length} timova, ${input.reduce((n,l)=>n+l.games.length,0)} utakmica`);
