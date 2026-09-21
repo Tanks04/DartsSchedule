@@ -1,6 +1,6 @@
 # DartsScheduler
 
-**DartsScheduler** je javni raspored pikado liga, timova i mjesta na kojima se igraju utakmice.
+**DartsScheduler** je javni raspored namijenjen praćenju lokalnih pikado liga, timova i mjesta na kojima se igraju utakmice.
 
 U aplikaciji možete:
 
@@ -16,7 +16,7 @@ Aplikacija pamti odabranu ligu, tim i lokaciju na vašem uređaju. Pri sljedeće
 
 **[Pokreni DartsScheduler](https://tanks04.github.io/DartsSchedule/)**
 
-Za samo pregledavanje nije potrebna registracija.
+Za pregledavanje nije potrebna registracija.
 
 ## Instalacija na mobitel
 
@@ -108,11 +108,12 @@ Zato prije spremanja treba provjeriti da je promjena dogovorena i točno unesena
 
 Uvoz i izvoz dostupni su kapetanima, voditeljima klubova i administratorima. Gledatelji nemaju te gumbe.
 
-Predložak za unos sezone 2027./28. može se preuzeti iz prozora **Uvezi Excel**. Aplikacija obrađuje list **Utakmice** sa stupcima:
+Predložak za unos novih sezona može se preuzeti iz prozora **Uvezi Excel**. Aplikacija obrađuje list **Utakmice** sa stupcima:
 
 `ID | Sezona | Liga | Datum | Vrijeme | Domaćin | Gost | Kolo | Lokacija | Napomena`
 
 Obavezni su sezona, liga, datum, domaćin i gost. Prije uvoza aplikacija prikazuje pregled i prijavljuje retke koje ne može prihvatiti.
+Primjer excela nalazi se skupa sa Source Kodom.
 
 ## Podaci i točnost
 
