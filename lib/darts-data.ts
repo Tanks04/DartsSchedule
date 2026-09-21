@@ -4,7 +4,7 @@ export type Club = { id: string; name: string; contact: string; phone: string; e
 export type Match = {
   id: string; date: string; time: string; homeId: string; awayId: string;
   home: string; away: string; venueId: string; venue: string;
-  competitionId: string; competition: string; round: string; note: string;
+  competitionId: string; competition: string; round: string; note: string; externalEventId: string;
 };
 export type Team = {
   id: string; name: string; clubId: string; club: string; defaultVenueId: string; defaultVenue: string;

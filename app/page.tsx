@@ -1,17 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Bell, CalendarDays, Edit3, LogIn, LogOut, MapPin, Settings, ShieldCheck, UserCog, Users } from "lucide-react";
+import { Bell, CalendarDays, Download, Edit3, LogIn, LogOut, MapPin, Settings, ShieldCheck, Upload, UserCog, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
-import { actualVenue, dateKey, formatDate, seedData, type Club, type Competition, type Match, type SchedulerData, type Team, type Venue } from "@/lib/darts-data";
+import { actualVenue, dateKey, formatDate, normalizeHeader, seedData, type Club, type Competition, type Match, type SchedulerData, type Team, type Venue } from "@/lib/darts-data";
 
 type AppRole = "viewer" | "captain" | "club_manager" | "admin";
 type Captain = { email: string; user_id: string | null; team_id: string; team_name: string };
 type ClubManager = { email: string; user_id: string | null; club_id: string; club_name: string };
+type ExcelImportRow = { row:number; id:string; season:string; league:string; date:string; time:string; home:string; away:string; round:string; venue:string; note:string; error:string };
 const prefLeague = "dartsScheduler.defaultCompetition";
 const prefTeam = "dartsScheduler.defaultTeam";
 
@@ -35,10 +36,12 @@ export default function Home() {
   const [captainsOpen, setCaptainsOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [occupancyOpen, setOccupancyOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<Match | null>(null);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
   const admin = role === "admin";
+  const editor = role !== "viewer";
 
   const loadData = useCallback(async () => {
     if (!supabase) return;
@@ -71,7 +74,7 @@ export default function Home() {
     const teamNames = new Map(teams.map(t => [t.id,t.name]));
     const competitions: Competition[] = (competitionsR.data ?? []).map(c => ({ id:c.id,seasonId:c.season_id,name:c.name,externalId:c.external_id }));
     const competitionNames = new Map(competitions.map(c => [c.id,c.name]));
-    const matches: Match[] = (matchesR.data ?? []).map(m => ({ id:m.id,date:m.match_date,time:String(m.match_time ?? "").slice(0,5),homeId:m.home_team_id,awayId:m.away_team_id,home:teamNames.get(m.home_team_id) ?? "Nepoznata ekipa",away:teamNames.get(m.away_team_id) ?? "Nepoznata ekipa",venueId:m.venue_id ?? "",venue:venueNames.get(m.venue_id) ?? "",competitionId:m.competition_id ?? "",competition:competitionNames.get(m.competition_id) ?? m.league ?? "",round:m.round_name,note:m.note }));
+    const matches: Match[] = (matchesR.data ?? []).map(m => ({ id:m.id,date:m.match_date,time:String(m.match_time ?? "").slice(0,5),homeId:m.home_team_id,awayId:m.away_team_id,home:teamNames.get(m.home_team_id) ?? "Nepoznata ekipa",away:teamNames.get(m.away_team_id) ?? "Nepoznata ekipa",venueId:m.venue_id ?? "",venue:venueNames.get(m.venue_id) ?? "",competitionId:m.competition_id ?? "",competition:competitionNames.get(m.competition_id) ?? m.league ?? "",round:m.round_name,note:m.note,externalEventId:m.external_event_id??"" }));
     const matchMap = new Map(matches.map(m => [m.id,m]));
     const changes = (changesR.data ?? []).map(c => { const m=matchMap.get(c.match_id); return { id:c.id,matchId:c.match_id,changedAt:c.changed_at,changedBy:c.changed_by,oldDate:c.old_date,newDate:c.new_date,oldTime:String(c.old_time??"").slice(0,5),newTime:String(c.new_time??"").slice(0,5),competition:m?.competition??"",home:m?.home??"",away:m?.away??"" }; });
     setData({ seasons:(seasonsR.data??[]).map(s=>({id:s.id,name:s.name,active:s.is_active})),competitions,clubs,venues,teams,matches,changes });
@@ -134,9 +137,19 @@ export default function Home() {
   const weeklyRows=watchedTeams.map(team=>({team,match:data.matches.filter(m=>(m.homeId===team.id||m.awayId===team.id)&&m.date>=today&&m.date<=weekEnd).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time))[0]}));
   function selectCompetition(id:string){setCompetitionId(id);localStorage.setItem(prefLeague,id);const first=data.teams.find(t=>t.competitionIds.includes(id));if(first){setTeamId(first.id);localStorage.setItem(prefTeam,first.id);}}
   function selectTeam(id:string){setTeamId(id);localStorage.setItem(prefTeam,id);}
+  async function exportExcel(){
+    if(!selectedTeam)return;const XLSX=await import("xlsx");const competition=data.competitions.find(c=>c.id===competitionId);const season=data.seasons.find(s=>s.id===competition?.seasonId)?.name??"";
+    const rows=teamMatches.map(m=>({ID:m.externalEventId||m.id,Sezona:season,Liga:m.competition,Datum:new Date(`${m.date}T12:00:00`),Vrijeme:m.time,Domaćin:m.home,Gost:m.away,Kolo:m.round,Lokacija:actualVenue(m,data.teams),Napomena:m.note}));
+    const ws=XLSX.utils.json_to_sheet(rows,{header:["ID","Sezona","Liga","Datum","Vrijeme","Domaćin","Gost","Kolo","Lokacija","Napomena"],cellDates:true});ws["!cols"]=[{wch:22},{wch:12},{wch:22},{wch:12},{wch:10},{wch:28},{wch:28},{wch:12},{wch:28},{wch:30}];
+    const teamRows=leagueTeams.map(t=>({Tim:t.name,Klub:t.club,"Domaća lokacija":t.defaultVenue,Kontakt:t.contact,Telefon:t.phone,"E-mail":t.email,Napomena:t.note}));const tws=XLSX.utils.json_to_sheet(teamRows);tws["!cols"]=[{wch:28},{wch:22},{wch:28},{wch:24},{wch:18},{wch:28},{wch:30}];
+    const vws=XLSX.utils.json_to_sheet(data.venues.map(v=>({Lokacija:v.name,Adresa:v.address,Kontakt:v.contact,Telefon:v.phone,"E-mail":v.email,"Google Maps":v.map,Napomena:v.note})));vws["!cols"]=[{wch:28},{wch:34},{wch:24},{wch:18},{wch:28},{wch:38},{wch:30}];
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Utakmice");XLSX.utils.book_append_sheet(wb,tws,"Timovi");XLSX.utils.book_append_sheet(wb,vws,"Lokacije");XLSX.writeFile(wb,`DartsScheduler_${selectedTeam.name.replace(/[^a-z0-9]+/gi,"_")}_${season.replace(/[^0-9]+/g,"-")}.xlsx`);
+  }
 
   return <main className="app-shell">
     <header className="topbar"><div className="brand"><span>DS</span><div><strong>DartsScheduler</strong><small>raspored ekipa i lokacija</small></div></div><div className="top-actions">
+      {editor&&<Button variant="ghost" onClick={()=>setImportOpen(true)}><Upload/> Uvezi Excel</Button>}
+      {editor&&<Button variant="ghost" onClick={()=>void exportExcel()}><Download/> Izvezi Excel</Button>}
       <Button variant="ghost" onClick={()=>setSettingsOpen(true)}><Settings/> Postavke</Button>
       {admin&&<Button variant="outline" onClick={()=>setCaptainsOpen(true)}><UserCog/> Ovlasti</Button>}
       {sessionEmail?<Button variant="ghost" onClick={()=>supabase?.auth.signOut()}><LogOut/> Odjava</Button>:<Button variant="ghost" onClick={()=>setLoginOpen(true)}><LogIn/> Prijava</Button>}
@@ -153,6 +166,7 @@ export default function Home() {
     <SettingsDialog open={settingsOpen} onClose={()=>setSettingsOpen(false)} seasons={data.seasons} competitions={data.competitions} teams={data.teams} competitionId={competitionId} teamId={teamId} onCompetition={selectCompetition} onTeam={selectTeam}/>
     <ScheduleDialog open={scheduleOpen} onClose={()=>setScheduleOpen(false)} team={selectedTeam} matches={teamMatches} teams={data.teams} canEdit={canEdit} onEdit={m=>setEditing(m)}/>
     <OccupancyDialog open={occupancyOpen} onClose={()=>setOccupancyOpen(false)} venue={selectedVenue} days={occupancyDays}/>
+    <ImportDialog open={importOpen} onClose={()=>setImportOpen(false)} data={data} admin={admin} editableTeams={editableTeams} managedClubIds={managedClubIds} onSaved={async n=>{setImportOpen(false);setNotice(`Uvezeno je ${n} utakmica.`);await loadData();}} onNotice={setNotice}/>
     <EditMatchDialog match={editing} venues={data.venues} onClose={()=>setEditing(null)} onSaved={async()=>{setEditing(null);setNotice("Termin je izmijenjen i promjena je vidljiva svima.");await loadData();}} onNotice={setNotice}/>
     <EditTeamDialog team={editingTeam} venues={data.venues} clubs={data.clubs} admin={admin} onClose={()=>setEditingTeam(null)} onSaved={async()=>{setEditingTeam(null);setNotice("Podaci tima su spremljeni.");await loadData();}} onNotice={setNotice}/>
     <EditVenueDialog venue={editingVenue} onClose={()=>setEditingVenue(null)} onSaved={async()=>{setEditingVenue(null);setNotice("Podaci lokacije su spremljeni.");await loadData();}} onNotice={setNotice}/>
@@ -168,6 +182,24 @@ function ScheduleDialog({open,onClose,team,matches,teams,canEdit,onEdit}:{open:b
 }
 function OccupancyDialog({open,onClose,venue,days}:{open:boolean;onClose:()=>void;venue:Venue|undefined;days:{key:string;d:Date;matches:Match[]}[]}){
   return <Dialog open={open} onOpenChange={v=>!v&&onClose()}><DialogContent className="schedule-dialog"><DialogHeader><DialogTitle>Zauzetost · {venue?.name??"Lokacija"}</DialogTitle><DialogDescription>Sljedećih 30 dana, objedinjeno iz svih liga.</DialogDescription></DialogHeader><div className="occupancy-list">{days.map(day=><div className="day" key={day.key}><div><b>{new Intl.DateTimeFormat("hr-HR",{weekday:"short"}).format(day.d)}</b><span>{formatDate(day.key)}</span></div><Status busy={day.matches.length>0}/><div>{day.matches.length?day.matches.map(m=><span key={m.id}>{m.time||"—"} · {m.home} — {m.away}<small>{m.competition}</small></span>):"—"}</div></div>)}</div><DialogFooter><Button variant="outline" onClick={onClose}>Zatvori</Button></DialogFooter></DialogContent></Dialog>;
+}
+
+function ImportDialog({open,onClose,data,admin,editableTeams,managedClubIds,onSaved,onNotice}:{open:boolean;onClose:()=>void;data:SchedulerData;admin:boolean;editableTeams:string[];managedClubIds:string[];onSaved:(n:number)=>void;onNotice:(s:string)=>void}){
+  const[rows,setRows]=useState<ExcelImportRow[]>([]);const[fileName,setFileName]=useState("");const[busy,setBusy]=useState(false);const templateHref=`${process.env.NEXT_PUBLIC_BASE_PATH||""}/DartsScheduler_predlozak_2027_28.xlsx`;
+  useEffect(()=>{if(!open){setRows([]);setFileName("");setBusy(false);}},[open]);
+  const permitted=new Set([...editableTeams,...data.teams.filter(t=>managedClubIds.includes(t.clubId)).map(t=>t.id)]);
+  function textValue(v:unknown){return String(v??"").trim();}
+  function excelDate(v:unknown,XLSX:any){if(v instanceof Date&&!Number.isNaN(v.getTime()))return dateKey(v);if(typeof v==="number"){const p=XLSX.SSF.parse_date_code(v);if(p)return `${p.y}-${String(p.m).padStart(2,"0")}-${String(p.d).padStart(2,"0")}`;}const s=textValue(v);let m=s.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);if(m)return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[1]}-${m[2]}-${m[3]}`:"";}
+  function excelTime(v:unknown,XLSX:any){if(v instanceof Date)return `${String(v.getHours()).padStart(2,"0")}:${String(v.getMinutes()).padStart(2,"0")}`;if(typeof v==="number")return XLSX.SSF.format("hh:mm",v);const m=textValue(v).match(/(\d{1,2}):(\d{2})/);return m?`${m[1].padStart(2,"0")}:${m[2]}`:"";}
+  async function readFile(file:File){const XLSX=await import("xlsx");const wb=XLSX.read(await file.arrayBuffer(),{type:"array",cellDates:true});const sheet=wb.Sheets[wb.SheetNames.includes("Utakmice")?"Utakmice":wb.SheetNames[0]];const raw=XLSX.utils.sheet_to_json<Record<string,unknown>>(sheet,{defval:"",raw:true});const parsed=raw.map((source,index)=>{const normalized=new Map(Object.entries(source).map(([k,v])=>[normalizeHeader(k),v]));const get=(...keys:string[])=>keys.map(k=>normalized.get(normalizeHeader(k))).find(v=>v!==undefined&&v!=="")??"";const row:ExcelImportRow={row:index+2,id:textValue(get("ID","Identifikator")),season:textValue(get("Sezona","Season")),league:textValue(get("Liga","Natjecanje","League")),date:excelDate(get("Datum","Date"),XLSX),time:excelTime(get("Vrijeme","Time"),XLSX),home:textValue(get("Domaćin","Domacin","Doma","Home")),away:textValue(get("Gost","Away")),round:textValue(get("Kolo","Round")),venue:textValue(get("Lokacija","Mjesto","Venue")),note:textValue(get("Napomena","Note")),error:""};const errors:string[]=[];if(!row.season)errors.push("nedostaje sezona");if(!row.league)errors.push("nedostaje liga");if(!row.date)errors.push("neispravan datum");if(!row.home)errors.push("nedostaje domaćin");if(!row.away)errors.push("nedostaje gost");if(row.home&&row.away&&normalizeHeader(row.home)===normalizeHeader(row.away))errors.push("domaćin i gost su isti");if(!admin){const season=data.seasons.find(s=>normalizeHeader(s.name)===normalizeHeader(row.season));const competition=data.competitions.find(c=>c.seasonId===season?.id&&normalizeHeader(c.name)===normalizeHeader(row.league));const home=data.teams.find(t=>normalizeHeader(t.name)===normalizeHeader(row.home));const away=data.teams.find(t=>normalizeHeader(t.name)===normalizeHeader(row.away));if(!competition)errors.push("liga/sezona ne postoji");if(!home||!away)errors.push("tim ne postoji");else if(!permitted.has(home.id)&&!permitted.has(away.id))errors.push("nemaš ovlasti za ovu utakmicu");if(row.venue&&!data.venues.some(v=>normalizeHeader(v.name)===normalizeHeader(row.venue)))errors.push("lokacija ne postoji");}row.error=errors.join(", ");return row;});setRows(parsed);setFileName(file.name);}
+  async function importRows(){if(!supabase||!rows.length||rows.some(r=>r.error))return;setBusy(true);let count=0;const seasons=new Map(data.seasons.map(s=>[normalizeHeader(s.name),s.id]));const competitions=new Map(data.competitions.map(c=>[`${c.seasonId}|${normalizeHeader(c.name)}`,c.id]));const teams=new Map(data.teams.map(t=>[normalizeHeader(t.name),t.id]));const venues=new Map(data.venues.map(v=>[normalizeHeader(v.name),v.id]));const slug=(s:string)=>normalizeHeader(s).replaceAll(" ","-").slice(0,60);
+    for(const row of rows){let seasonId=seasons.get(normalizeHeader(row.season));if(!seasonId&&admin){const r=await supabase.from("seasons").insert({name:row.season,is_active:false}).select("id").single();if(r.error){onNotice(`Red ${row.row}: ${r.error.message}`);setBusy(false);return;}seasonId=r.data.id as string;seasons.set(normalizeHeader(row.season),seasonId);}if(!seasonId)continue;let competitionId=competitions.get(`${seasonId}|${normalizeHeader(row.league)}`);if(!competitionId&&admin){const r=await supabase.from("competitions").insert({season_id:seasonId,name:row.league,external_id:`excel-${slug(row.league)}`}).select("id").single();if(r.error){onNotice(`Red ${row.row}: ${r.error.message}`);setBusy(false);return;}competitionId=r.data.id as string;competitions.set(`${seasonId}|${normalizeHeader(row.league)}`,competitionId);}if(!competitionId)continue;
+      async function ensureTeam(name:string){let id=teams.get(normalizeHeader(name));if(!id&&admin){const r=await supabase!.from("teams").insert({name}).select("id").single();if(r.error)throw r.error;id=r.data.id as string;teams.set(normalizeHeader(name),id);}return id;}
+      let homeId:string|undefined,awayId:string|undefined;try{homeId=await ensureTeam(row.home);awayId=await ensureTeam(row.away);}catch(e:any){onNotice(`Red ${row.row}: ${e.message}`);setBusy(false);return;}if(!homeId||!awayId)continue;let venueId=row.venue?venues.get(normalizeHeader(row.venue)):undefined;if(row.venue&&!venueId&&admin){const r=await supabase.from("venues").insert({name:row.venue}).select("id").single();if(r.error){onNotice(`Red ${row.row}: ${r.error.message}`);setBusy(false);return;}venueId=r.data.id as string;venues.set(normalizeHeader(row.venue),venueId);}if(admin){const memberships=await supabase.from("competition_teams").upsert([{competition_id:competitionId,team_id:homeId},{competition_id:competitionId,team_id:awayId}],{onConflict:"competition_id,team_id",ignoreDuplicates:true});if(memberships.error){onNotice(`Red ${row.row}: ${memberships.error.message}`);setBusy(false);return;}}
+      const external=row.id||`excel:${slug(row.season)}:${slug(row.league)}:${slug(row.round||row.date)}:${slug(row.home)}:${slug(row.away)}`;const payload={match_date:row.date,match_time:row.time||null,home_team_id:homeId,away_team_id:awayId,venue_id:venueId||null,competition_id:competitionId,external_event_id:external,league:row.league,round_name:row.round,note:row.note};const existing=await supabase.from("matches").select("id").eq("competition_id",competitionId).eq("external_event_id",external).maybeSingle();const saved=existing.data?.id?await supabase.from("matches").update(payload).eq("id",existing.data.id):await supabase.from("matches").insert(payload);if(saved.error){onNotice(`Red ${row.row}: ${saved.error.message}`);setBusy(false);return;}count++;
+    }setBusy(false);onSaved(count);
+  }
+  const errors=rows.filter(r=>r.error);return <Dialog open={open} onOpenChange={v=>!v&&onClose()}><DialogContent className="import-dialog"><DialogHeader><DialogTitle>Uvezi Excel ili CSV</DialogTitle><DialogDescription>Uvoze se podaci iz lista „Utakmice“. Prvo provjeri pregled; promjene postaju vidljive svima.</DialogDescription></DialogHeader><div className="import-actions"><Input type="file" accept=".xlsx,.xls,.csv" onChange={e=>{const f=e.target.files?.[0];if(f)void readFile(f);}}/><a className="template-link" href={templateHref} download>Preuzmi predložak 2027./28.</a></div>{fileName&&<div className={`import-summary ${errors.length?"has-errors":"ready"}`}><b>{fileName}</b><span>{rows.length} redaka · {errors.length?`${errors.length} s greškom`:"spremno za uvoz"}</span></div>}<div className="import-preview">{rows.slice(0,12).map(r=><div key={r.row} className={r.error?"bad":""}><b>Red {r.row}</b><span>{r.date} {r.time} · {r.home} — {r.away}</span><small>{r.error||`${r.season} · ${r.league} · ${r.round}`}</small></div>)}{rows.length>12&&<p>…i još {rows.length-12} redaka</p>}</div><DialogFooter><Button variant="outline" onClick={onClose}>Odustani</Button><Button className="red-button" disabled={busy||!rows.length||!!errors.length} onClick={()=>void importRows()}><Upload/> {busy?"Uvozim…":"Uvezi"}</Button></DialogFooter></DialogContent></Dialog>;
 }
 
 function LoginDialog({open,onClose,onNotice}:{open:boolean;onClose:()=>void;onNotice:(s:string)=>void}){
