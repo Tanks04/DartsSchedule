@@ -154,8 +154,8 @@ export default function Home() {
   const selectedTeam=orgData.teams.find(team=>team.id===teamId);
   const selectedVenue=orgData.venues.find(v=>v.id===venueId);
   const teamMatches=useMemo(()=>orgData.matches.filter(m=>m.competitionId===competitionId&&(m.homeId===teamId||m.awayId===teamId)),[orgData.matches,competitionId,teamId]);
-  const venueMatches=useMemo(()=>orgData.matches.filter(m=>actualVenue(m,orgData.teams)===(selectedVenue?.name??"")),[orgData.matches,orgData.teams,selectedVenue]);
-  const venueBookings=useMemo(()=>orgData.bookings.filter(b=>b.venueId===venueId),[orgData.bookings,venueId]);
+  const venueMatches=useMemo(()=>selectedVenue?orgData.matches.filter(m=>actualVenue(m,orgData.teams)===selectedVenue.name):[],[orgData.matches,orgData.teams,selectedVenue]);
+  const venueBookings=useMemo(()=>selectedVenue?orgData.bookings.filter(b=>b.venueId===selectedVenue.id):[],[orgData.bookings,selectedVenue]);
   const today=dateKey(new Date());
   const todayMatches=venueMatches.filter(m=>m.date===today);
   const todayBookings=venueBookings.filter(b=>b.date===today);
