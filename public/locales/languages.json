@@ -1,0 +1,5 @@
+[
+  { "code": "hr", "name": "Hrvatski", "file": "hr.json", "locale": "hr-HR" },
+  { "code": "en", "name": "English", "file": "en.json", "locale": "en-GB" },
+  { "code": "de", "name": "Deutsch", "file": "de.json", "locale": "de-DE" }
+]

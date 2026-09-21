@@ -4,11 +4,13 @@
 
 U aplikaciji možete:
 
+- odabrati savez ili organizaciju čiji raspored pratite;
 - odabrati ligu i tim koji pratite;
 - pregledati sljedeću utakmicu i cijeli raspored ekipe;
 - provjeriti kada je određeno mjesto slobodno ili zauzeto;
 - vidjeti utakmice svih liga koje se igraju na istoj lokaciji;
 - otvoriti adresu i kontaktne podatke kluba kada su dostupni.
+- koristiti sučelje na hrvatskom, engleskom ili njemačkom jeziku.
 
 Aplikacija pamti odabranu ligu, tim i lokaciju na vašem uređaju. Pri sljedećem otvaranju odmah prikazuje raspored koji pratite.
 
@@ -49,6 +51,8 @@ Aplikaciju možete koristiti izravno u pregledniku. Chrome i Edge također mogu 
 5. Odabir se automatski pamti samo na uređaju na kojem ste ga napravili. U postavkama ga možete naknadno promijeniti.
 
 Ako utakmica nema navedenu lokaciju, to znači da mjesto igranja još nije uneseno ili potvrđeno.
+
+Rezervacije turnira, Mastersa i drugih događaja također označavaju lokaciju zauzetom, ali se ne prikazuju kao ligaške utakmice.
 
 ## Prijava
 
@@ -91,7 +95,9 @@ Voditelj može uređivati rasporede i podatke tih timova te uvoziti njihove utak
 
 ### Administrator
 
-Administrator upravlja ligama, sezonama, timovima, klubovima, lokacijama i korisničkim ovlastima. Može uvesti cijele rasporede i otvoriti novu sezonu ili ligu.
+Administrator organizacije upravlja ligama, sezonama, timovima, klubovima, lokacijama i korisničkim ovlastima svojeg saveza. Može uvesti cijele rasporede i otvoriti novu sezonu ili ligu.
+
+Platform administrator otvara nove organizacije i pomaže kod oporavka pristupa, ali administratori pojedinih saveza samostalno vode svoje podatke.
 
 ## Važno kod izmjena
 
