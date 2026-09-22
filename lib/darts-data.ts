@@ -1,7 +1,7 @@
 export type Organization = { id: string; name: string; slug: string; countryCode: string; defaultLanguage: string; website: string; logo: string; active: boolean };
 export type Season = { id: string; organizationId: string; name: string; active: boolean };
 export type Competition = { id: string; organizationId: string; seasonId: string; name: string; externalId: string };
-export type Club = { id: string; organizationId: string; name: string; contact: string; phone: string; email: string; note: string; venueIds: string[] };
+export type Club = { id: string; organizationId: string; name: string; contact: string; phone: string; email: string; note: string; venueIds: string[]; active: boolean; archivedAt: string; archivedReason: string };
 export type Match = {
   id: string; date: string; time: string; homeId: string; awayId: string;
   home: string; away: string; venueId: string; venue: string;
@@ -9,7 +9,7 @@ export type Match = {
 };
 export type Team = {
   id: string; organizationId: string; name: string; clubId: string; club: string; defaultVenueId: string; defaultVenue: string;
-  contact: string; phone: string; email: string; note: string; competitionIds: string[];
+  contact: string; phone: string; email: string; note: string; competitionIds: string[]; active: boolean; archivedAt: string; archivedReason: string;
 };
 export type Venue = {
   id: string; organizationId: string; name: string; address: string; mine: boolean; contact: string;
@@ -37,10 +37,10 @@ export const seedData: SchedulerData = {
     "4. LIGA SKUPINA A", "4. LIGA SKUPINA B", "4. LIGA SKUPINA C", "KLASIČNA LIGA", "SENIORKE",
   ].map((name, i) => ({ id: `competition-${i + 1}`, organizationId: "org-psgz", seasonId: "season-2026", name, externalId: String(815 + i) })),
   matches: [], changes: [], bookings: [],
-  clubs: [{ id: "club-a1", organizationId: "org-psgz", name: "PK A1", contact: "Željko Žitnik", phone: "", email: "", note: "", venueIds: ["venue-a1"] }],
+  clubs: [{ id: "club-a1", organizationId: "org-psgz", name: "PK A1", contact: "Željko Žitnik", phone: "", email: "", note: "", venueIds: ["venue-a1"], active: true, archivedAt: "", archivedReason: "" }],
   teams: [
-    { id: "team-a1", organizationId: "org-psgz", name: "A1", clubId: "club-a1", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"] },
-    { id: "team-a1-otpisani", organizationId: "org-psgz", name: "A1 OTPISANI", clubId: "club-a1", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"] },
+    { id: "team-a1", organizationId: "org-psgz", name: "A1", clubId: "club-a1", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"], active: true, archivedAt: "", archivedReason: "" },
+    { id: "team-a1-otpisani", organizationId: "org-psgz", name: "A1 OTPISANI", clubId: "club-a1", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"], active: true, archivedAt: "", archivedReason: "" },
   ],
   venues: [{ id: "venue-a1", organizationId: "org-psgz", name: "A1 – Cirkovci 72", address: "Cirkovci 72", mine: true, contact: "", phone: "", email: "", map: "", note: "" }],
 };

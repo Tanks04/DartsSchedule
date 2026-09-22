@@ -1,4 +1,4 @@
-# DartsScheduler v7 – administratorsko postavljanje
+# DartsScheduler – administratorsko postavljanje
 
 Ovaj dokument je za vlasnika instalacije i platform administratore. Javni korisnički opis nalazi se u `README.md`.
 
@@ -8,6 +8,14 @@ Ovaj dokument je za vlasnika instalacije i platform administratore. Javni korisn
 2. U Supabase SQL Editoru pokrenite `supabase/upgrade_v7_organizations.sql`.
 3. Prenesite v7 source na GitHub i pričekajte završetak Pages workflowa.
 4. Odjavite se i ponovno prijavite jednokratnom e-mail poveznicom.
+
+### Nadogradnja v7 na v8
+
+Za podršku arhiviranju klubova i timova u Supabase SQL Editoru jednom pokrenite:
+
+`supabase/upgrade_v8_archiving.sql`
+
+Zatim objavite novi source na GitHub Pages. Migracija ne briše niti mijenja postojeće utakmice, timove ili klubove; samo dodaje status arhive i razlog arhiviranja.
 
 Migracija postojeće podatke povezuje s organizacijom **Pikado savez Grada Zagreba**, postojeće administratore pretvara u platform administratore i zadržava kapetane i voditelje klubova.
 
@@ -30,6 +38,19 @@ Migracija postojeće podatke povezuje s organizacijom **Pikado savez Grada Zagre
 - Gledatelj nema prava zapisivanja.
 
 Organizacija uvijek treba imati barem jednog administratora. Preporučena su dva.
+
+## Timovi, lige i arhiva
+
+- Kapetan može urediti i arhivirati svoj tim.
+- Voditelj kluba može urediti ili arhivirati svoj klub i njegove timove.
+- Administrator organizacije može tim premjestiti između klubova, ukloniti iz lige te arhivirati ili vratiti klubove i timove.
+- Platform administrator ima ista prava u svim organizacijama.
+
+Uklanjanje iz lige briše samo red iz `competition_teams`. Postojeće utakmice ostaju sačuvane.
+
+Arhiviranje postavlja `is_active = false`, datum i razlog arhiviranja. Arhivirani podaci ostaju dostupni za povezivanje povijesnih utakmica, ali se ne prikazuju među aktivnim klubovima i timovima. Buduće utakmice arhiviranih timova ne računaju se u zauzetost lokacija.
+
+Trajno brisanje namjerno nije ponuđeno kroz aplikaciju. Ako je zapis stvoren pogreškom i nema povezanih utakmica, platform administrator ga može ukloniti ručno tek nakon provjere svih stranih ključeva i sigurnosne kopije baze.
 
 ## Nova organizacija
 

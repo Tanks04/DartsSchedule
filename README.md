@@ -91,13 +91,33 @@ Za jedan tim mogu se dodijeliti najviše dva kapetana.
 
 Voditelj kluba može uređivati sve timove i lokacije povezane sa svojim klubom. To je namijenjeno osobama koje vode prostor ili klub u kojem igra više različitih ekipa.
 
-Voditelj može uređivati rasporede i podatke tih timova te uvoziti njihove utakmice iz Excel ili CSV datoteke.
+Voditelj može uređivati rasporede i podatke tih timova, uvoziti njihove utakmice iz Excel ili CSV datoteke te arhivirati tim ili klub koji više ne sudjeluje. Arhiviranje ne briše stare utakmice.
 
 ### Administrator
 
 Administrator organizacije upravlja ligama, sezonama, timovima, klubovima, lokacijama i korisničkim ovlastima svojeg saveza. Može uvesti cijele rasporede i otvoriti novu sezonu ili ligu.
 
 Platform administrator otvara nove organizacije i pomaže kod oporavka pristupa, ali administratori pojedinih saveza samostalno vode svoje podatke.
+
+## Uređivanje tima i kluba
+
+Nakon prijave odaberite ligu i tim. Ispod izbornika pojavljuju se jasno označene uredničke mogućnosti:
+
+- **Uredi odabrani tim** – kontakt, klub, domaća lokacija i napomena;
+- **Uredi klub** – kontaktni podaci odabranog kluba;
+- **Arhiva** – pregled i vraćanje timova i klubova koji više nisu aktivni.
+
+Kapetan vidi uređivanje svojeg tima. Voditelj kluba može uređivati klub i sve njegove timove. Administrator organizacije može tim premjestiti u drugi klub ili ukloniti iz odabrane lige.
+
+## Uklanjanje iz lige i arhiviranje
+
+**Ukloni iz odabrane lige** uklanja samo članstvo tima u toj ligi. Tim, klub i već unesene utakmice ostaju sačuvani.
+
+**Arhiviraj tim** koristi se kada tim prestane djelovati ili bude isključen iz natjecanja. Tim nestaje iz aktivnih izbornika, a njegove buduće utakmice više ne zauzimaju lokaciju. Stare utakmice ostaju u povijesti.
+
+**Arhiviraj klub i njegove timove** arhivira klub i sve njegove aktivne timove. Preporučuje se upisati razlog arhiviranja. Sve se kasnije može vratiti kroz prozor **Arhiva**.
+
+Trajno brisanje nije dostupno u uobičajenom sučelju jer bi moglo obrisati rasporede i povijesne podatke.
 
 ## Važno kod izmjena
 
