@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Bell, Building2, CalendarDays, Download, Edit3, LogIn, LogOut, MapPin, Plus, Settings, ShieldCheck, Upload, UserCog, Users } from "lucide-react";
+import { Bell, Building2, CalendarDays, Download, Edit3, LogIn, LogOut, MapPin, Menu, Plus, Settings, ShieldCheck, Upload, UserCog, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -45,6 +45,7 @@ export default function Home() {
   const [organizationsOpen, setOrganizationsOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [occupancyOpen, setOccupancyOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [editing, setEditing] = useState<Match | null>(null);
@@ -159,8 +160,8 @@ export default function Home() {
   const today=dateKey(new Date());
   const todayMatches=venueMatches.filter(m=>m.date===today);
   const todayBookings=venueBookings.filter(b=>b.date===today);
-  const occupancyDays=Array.from({length:30},(_,index)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+index);const key=dateKey(d);return{key,d,matches:venueMatches.filter(m=>m.date===key),bookings:venueBookings.filter(b=>b.date===key)};});
-  const weekEnd=occupancyDays[7]?.key??today;
+  const weekEndDate=new Date();weekEndDate.setHours(12,0,0,0);weekEndDate.setDate(weekEndDate.getDate()+7);
+  const weekEnd=dateKey(weekEndDate);
   const canEditTeam=(team?:Team)=>!!team&&(organizationAdmin||editableTeams.includes(team.id)||managedClubIds.includes(team.clubId));
   const canEditMatch=(match:Match)=>canEditTeam(orgData.teams.find(team=>team.id===match.homeId))||canEditTeam(orgData.teams.find(team=>team.id===match.awayId));
   const canEditSelectedVenue=!!selectedVenue&&(organizationAdmin||orgData.clubs.some(club=>managedClubIds.includes(club.id)&&club.venueIds.includes(selectedVenue.id)));
@@ -198,11 +199,11 @@ export default function Home() {
       {organizationAdmin&&<Button variant="outline" onClick={()=>setPermissionsOpen(true)}><UserCog/>{t("action.permissions")}</Button>}
       {platformAdmin&&<Button variant="outline" onClick={()=>setOrganizationsOpen(true)}><Building2/>{t("action.organizations")}</Button>}
       {sessionEmail?<Button variant="ghost" onClick={()=>supabase?.auth.signOut()}><LogOut/>{t("action.logout")}</Button>:<Button variant="ghost" onClick={()=>setLoginOpen(true)}><LogIn/>{t("action.login")}</Button>}
-    </div></header>
+    </div><Button className="mobile-menu-trigger" variant="ghost" size="icon" aria-label={t("action.menu")} onClick={()=>setMobileMenuOpen(true)}><Menu/></Button></header>
     {notice&&<button className="notice" onClick={()=>setNotice("")}>{notice}</button>}
     {!supabaseConfigured&&<div className="setup-note">{t("common.demo")}</div>}
     <div className="organization-strip"><Building2/><strong>{data.organizations.find(o=>o.id===organizationId)?.name??"DartsScheduler"}</strong></div>
-    <section className="panel location-status-panel"><div className="location-status-head"><div><span className="eyebrow"><MapPin/>{t("location.status")}</span><h2>{selectedVenue?.name??t("location.none")}</h2></div><div className="panel-tools"><NativeSelect value={venueId} onChange={e=>selectVenue(e.target.value)}>{orgData.venues.slice().sort((a,b)=>Number(b.mine)-Number(a.mine)||a.name.localeCompare(b.name)).map(v=><NativeSelectOption key={v.id} value={v.id}>{v.mine?"★ ":""}{v.name}</NativeSelectOption>)}</NativeSelect>{canEditSelectedVenue&&<Button variant="ghost" size="icon" onClick={()=>setEditingVenue(selectedVenue!)}><Edit3/></Button>}{canEditSelectedVenue&&<Button variant="ghost" size="icon" title={t("action.addBooking")} onClick={()=>setBookingOpen(true)}><Plus/></Button>}</div></div>{selectedVenue&&<p className="meta"><MapPin/>{selectedVenue.address}{selectedVenue.mine&&<b className="mine">{t("location.mine")}</b>}</p>}<button className={`today status-trigger ${busyToday?"busy":"free"}`} onClick={()=>setOccupancyOpen(true)}><div><small>{t("status.today")}</small><Status busy={busyToday} t={t}/></div><div>{busyToday?<>{todayMatches.map(m=><span key={m.id}>{m.time||"—"} · {m.home} — {m.away}<small>{m.competition}</small></span>)}{todayBookings.map(b=><span key={b.id}>{b.startTime||"—"} · {b.title}<small>{t("booking.label")}{b.organizer?` · ${b.organizer}`:""}</small></span>)}</>:<span>{t("status.noMatches")}</span>}<small>{t("status.next30")}</small></div></button></section>
+    <section className="panel location-status-panel"><div className="location-status-head"><div><span className="eyebrow"><MapPin/>{t("location.status")}</span><h2>{selectedVenue?.name??t("location.none")}</h2></div><div className="panel-tools"><NativeSelect value={venueId} onChange={e=>selectVenue(e.target.value)}>{orgData.venues.slice().sort((a,b)=>Number(b.mine)-Number(a.mine)||a.name.localeCompare(b.name)).map(v=><NativeSelectOption key={v.id} value={v.id}>{v.mine?"★ ":""}{v.name}</NativeSelectOption>)}</NativeSelect>{canEditSelectedVenue&&<Button variant="ghost" size="icon" onClick={()=>setEditingVenue(selectedVenue!)}><Edit3/></Button>}{canEditSelectedVenue&&<Button variant="ghost" size="icon" title={t("action.addBooking")} onClick={()=>setBookingOpen(true)}><Plus/></Button>}</div></div>{selectedVenue&&<p className="meta"><MapPin/>{selectedVenue.address}{selectedVenue.mine&&<b className="mine">{t("location.mine")}</b>}</p>}<button disabled={!selectedVenue} className={`today status-trigger ${busyToday?"busy":"free"}`} onClick={()=>setOccupancyOpen(true)}><div><small>{t("status.today")}</small><Status busy={busyToday} t={t}/></div><div>{busyToday?<>{todayMatches.map(m=><span key={m.id}>{m.time||"—"} · {m.home} — {m.away}<small>{m.competition}</small></span>)}{todayBookings.map(b=><span key={b.id}>{b.startTime||"—"} · {b.title}<small>{t("booking.label")}{b.organizer?` · ${b.organizer}`:""}</small></span>)}</>:<span>{t("status.noMatches")}</span>}<small>{selectedVenue?t("status.next30"):t("location.selectFirst")}</small></div></button></section>
     <div className="filters compact-filters"><label>{t("field.league")}<NativeSelect value={competitionId} onChange={e=>selectCompetition(e.target.value)}>{orgData.competitions.map(c=><NativeSelectOption key={c.id} value={c.id}>{c.name}</NativeSelectOption>)}</NativeSelect></label><label>{t("field.team")}<NativeSelect value={teamId} onChange={e=>selectTeam(e.target.value)}>{leagueTeams.map(team=><NativeSelectOption key={team.id} value={team.id}>{team.name}</NativeSelectOption>)}</NativeSelect></label></div>
     <section className="panel weekly-panel"><div className="panel-head"><div><span className="eyebrow"><Users/>{t("week.title")}</span><h1>{watchedTeams.length>1?`${watchedTeams.length} ${t("week.myTeams")}`:selectedTeam?.name??t("schedule.team")}</h1></div><div className="panel-tools"><span className="role-pill">{t(`role.${role}`)}</span>{canEditTeam(selectedTeam)&&<Button variant="ghost" size="icon" onClick={()=>setEditingTeam(selectedTeam!)}><Edit3/></Button>}<Button variant="outline" onClick={()=>setScheduleOpen(true)}><CalendarDays/>{t("action.schedule")}</Button></div></div>
       <div className="weekly-team-list">{loading?<Empty>{t("common.loading")}</Empty>:weeklyRows.map(({team,match})=><button key={team.id} className={`weekly-team-row ${team.id===teamId?"selected":""}`} onClick={()=>{const league=team.competitionIds[0];if(league)selectCompetition(league);selectTeam(team.id);}}><strong>{team.name}</strong>{match?<><span>{formatDate(match.date,false,locale)} · {match.time||"—"}</span><span>{match.home} — {match.away}</span><em>{match.competition}</em></>:<span className="no-game">{t("week.noGame")}</span>}</button>)}</div>
@@ -210,9 +211,10 @@ export default function Home() {
     </section>
 
     <LoginDialog open={loginOpen} onClose={()=>setLoginOpen(false)} onNotice={setNotice} t={t}/>
+    <MobileMenuDialog open={mobileMenuOpen} onClose={()=>setMobileMenuOpen(false)} editor={editor} organizationAdmin={organizationAdmin} platformAdmin={platformAdmin} signedIn={!!sessionEmail} onImport={()=>setImportOpen(true)} onExport={()=>void exportExcel()} onSettings={()=>setSettingsOpen(true)} onPermissions={()=>setPermissionsOpen(true)} onOrganizations={()=>setOrganizationsOpen(true)} onLogin={()=>setLoginOpen(true)} onLogout={()=>void supabase?.auth.signOut()} t={t}/>
     <SettingsDialog open={settingsOpen} onClose={()=>setSettingsOpen(false)} organizations={data.organizations} organizationId={organizationId} onOrganization={selectOrganization} seasons={orgData.seasons} competitions={orgData.competitions} teams={orgData.teams} competitionId={competitionId} teamId={teamId} onCompetition={selectCompetition} onTeam={selectTeam} languages={languages} language={language} onLanguage={setLanguage} t={t}/>
     <ScheduleDialog open={scheduleOpen} onClose={()=>setScheduleOpen(false)} team={selectedTeam} matches={teamMatches} teams={orgData.teams} canEdit={canEditMatch} onEdit={setEditing} t={t} locale={locale}/>
-    <OccupancyDialog open={occupancyOpen} onClose={()=>setOccupancyOpen(false)} venue={selectedVenue} days={occupancyDays} t={t} locale={locale}/>
+    <OccupancyDialog open={occupancyOpen} onClose={()=>setOccupancyOpen(false)} venue={selectedVenue} matches={venueMatches} bookings={venueBookings} t={t} locale={locale}/>
     <ImportDialog open={importOpen} onClose={()=>setImportOpen(false)} data={orgData} organizationId={organizationId} admin={organizationAdmin} editableTeams={editableTeams} managedClubIds={managedClubIds} onSaved={async count=>{setImportOpen(false);setNotice(t("import.saved",{count}));await loadData();}} onNotice={setNotice} t={t}/>
     <EditMatchDialog match={editing} venues={orgData.venues} onClose={()=>setEditing(null)} onSaved={async()=>{setEditing(null);await loadData();}} onNotice={setNotice} t={t}/>
     <EditTeamDialog team={editingTeam} venues={orgData.venues} clubs={orgData.clubs} admin={organizationAdmin} onClose={()=>setEditingTeam(null)} onSaved={async()=>{setEditingTeam(null);await loadData();}} onNotice={setNotice} t={t}/>
@@ -224,14 +226,38 @@ export default function Home() {
 }
 
 function Empty({children}:{children:React.ReactNode}){return <div className="empty">{children}</div>}
+
+function MobileMenuDialog({open,onClose,editor,organizationAdmin,platformAdmin,signedIn,onImport,onExport,onSettings,onPermissions,onOrganizations,onLogin,onLogout,t}:{open:boolean;onClose:()=>void;editor:boolean;organizationAdmin:boolean;platformAdmin:boolean;signedIn:boolean;onImport:()=>void;onExport:()=>void;onSettings:()=>void;onPermissions:()=>void;onOrganizations:()=>void;onLogin:()=>void;onLogout:()=>void;t:Translator}){
+  const run=(action:()=>void)=>{onClose();action();};
+  return <Dialog open={open} onOpenChange={value=>!value&&onClose()}><DialogContent className="mobile-nav-dialog"><DialogHeader><DialogTitle>{t("action.menu")}</DialogTitle><DialogDescription>{t("mobileMenu.description")}</DialogDescription></DialogHeader><div className="mobile-nav-actions"><Button variant="outline" onClick={()=>run(onSettings)}><Settings/>{t("action.settings")}</Button>{editor&&<Button variant="outline" onClick={()=>run(onImport)}><Upload/>{t("action.import")}</Button>}{editor&&<Button variant="outline" onClick={()=>run(onExport)}><Download/>{t("action.export")}</Button>}{organizationAdmin&&<Button variant="outline" onClick={()=>run(onPermissions)}><UserCog/>{t("action.permissions")}</Button>}{platformAdmin&&<Button variant="outline" onClick={()=>run(onOrganizations)}><Building2/>{t("action.organizations")}</Button>}{signedIn?<Button variant="outline" onClick={()=>run(onLogout)}><LogOut/>{t("action.logout")}</Button>:<Button variant="outline" onClick={()=>run(onLogin)}><LogIn/>{t("action.login")}</Button>}</div><DialogFooter><Button variant="outline" onClick={onClose}>{t("action.close")}</Button></DialogFooter></DialogContent></Dialog>;
+}
 function MatchRow({match,venue,editable,onEdit,t,locale}:{match:Match;venue:string;editable:boolean;onEdit:()=>void;t:Translator;locale:string}){return <article className="match"><div className="when"><b>{formatDate(match.date,false,locale)}</b><span>{match.time||"—"}</span></div><div><b>{match.home}</b><span> — </span><b>{match.away}</b><small><MapPin/>{venue||t("location.unspecified")}</small></div><em>{[match.competition,match.round].filter(Boolean).join(" · ")}</em>{editable&&<Button variant="ghost" size="icon" onClick={onEdit}><Edit3/></Button>}</article>}
 
 function ScheduleDialog({open,onClose,team,matches,teams,canEdit,onEdit,t,locale}:{open:boolean;onClose:()=>void;team:Team|undefined;matches:Match[];teams:Team[];canEdit:(m:Match)=>boolean;onEdit:(m:Match)=>void;t:Translator;locale:string}){
   return <Dialog open={open} onOpenChange={v=>!v&&onClose()}><DialogContent className="schedule-dialog"><DialogHeader><DialogTitle>{t("action.schedule")} · {team?.name??t("field.team")}</DialogTitle><DialogDescription>{t("schedule.fullDescription")}</DialogDescription></DialogHeader><div className="dialog-match-list">{matches.length?matches.map(m=><MatchRow key={m.id} match={m} venue={actualVenue(m,teams)} editable={canEdit(m)} onEdit={()=>onEdit(m)} t={t} locale={locale}/>):<Empty>{t("schedule.empty")}</Empty>}</div><DialogFooter><Button variant="outline" onClick={onClose}>{t("action.close")}</Button></DialogFooter></DialogContent></Dialog>;
 }
 
-function OccupancyDialog({open,onClose,venue,days,t,locale}:{open:boolean;onClose:()=>void;venue:Venue|undefined;days:{key:string;d:Date;matches:Match[];bookings:Booking[]}[];t:Translator;locale:string}){
-  return <Dialog open={open} onOpenChange={v=>!v&&onClose()}><DialogContent className="schedule-dialog"><DialogHeader><DialogTitle>{t("occupancy.title")} · {venue?.name??t("field.venue")}</DialogTitle><DialogDescription>{t("occupancy.description")}</DialogDescription></DialogHeader><div className="occupancy-list">{days.map(day=>{const busy=day.matches.length+day.bookings.length>0;return <div className="day" key={day.key}><div><b>{new Intl.DateTimeFormat(locale,{weekday:"short"}).format(day.d)}</b><span>{formatDate(day.key,false,locale)}</span></div><Status busy={busy} t={t}/><div>{busy?<>{day.matches.map(m=><span key={m.id}>{m.time||"—"} · {m.home} — {m.away}<small>{m.competition}</small></span>)}{day.bookings.map(b=><span key={b.id}>{b.startTime||"—"} · {b.title}<small>{t("booking.label")}{b.organizer?` · ${b.organizer}`:""}</small></span>)}</>:"—"}</div></div>})}</div><DialogFooter><Button variant="outline" onClick={onClose}>{t("action.close")}</Button></DialogFooter></DialogContent></Dialog>;
+function OccupancyDialog({open,onClose,venue,matches,bookings,t,locale}:{open:boolean;onClose:()=>void;venue:Venue|undefined;matches:Match[];bookings:Booking[];t:Translator;locale:string}){
+  const[page,setPage]=useState(0);
+  const[wholeSeason,setWholeSeason]=useState(false);
+  const[showFree,setShowFree]=useState(false);
+  useEffect(()=>{if(open){setPage(0);setWholeSeason(false);setShowFree(false);}},[open,venue?.id]);
+  const days=useMemo(()=>{
+    const todayDate=new Date();todayDate.setHours(12,0,0,0);
+    const eventDates=[...matches.map(m=>m.date),...bookings.map(b=>b.date)].filter(Boolean).sort();
+    let start=new Date(todayDate);let end=new Date(todayDate);
+    if(wholeSeason&&eventDates.length){start=new Date(`${eventDates[0]}T12:00:00`);end=new Date(`${eventDates[eventDates.length-1]}T12:00:00`);}
+    else{start.setDate(start.getDate()+page*30);end=new Date(start);end.setDate(end.getDate()+29);}
+    const matchesByDate=new Map<string,Match[]>();for(const match of matches)matchesByDate.set(match.date,[...(matchesByDate.get(match.date)??[]),match]);
+    const bookingsByDate=new Map<string,Booking[]>();for(const booking of bookings)bookingsByDate.set(booking.date,[...(bookingsByDate.get(booking.date)??[]),booking]);
+    const result:{key:string;d:Date;matches:Match[];bookings:Booking[]}[]=[];
+    for(const cursor=new Date(start);cursor<=end&&result.length<550;cursor.setDate(cursor.getDate()+1)){
+      const key=dateKey(cursor);const dayMatches=matchesByDate.get(key)??[];const dayBookings=bookingsByDate.get(key)??[];
+      if(!wholeSeason||showFree||dayMatches.length+dayBookings.length)result.push({key,d:new Date(cursor),matches:dayMatches,bookings:dayBookings});
+    }
+    return result;
+  },[matches,bookings,page,wholeSeason,showFree]);
+  return <Dialog open={open} onOpenChange={v=>!v&&onClose()}><DialogContent className="schedule-dialog"><DialogHeader><DialogTitle>{t("occupancy.title")} · {venue?.name??t("field.venue")}</DialogTitle><DialogDescription>{t(wholeSeason?"occupancy.seasonDescription":"occupancy.description")}</DialogDescription></DialogHeader><div className="occupancy-toolbar"><Button variant="outline" disabled={wholeSeason} onClick={()=>setPage(value=>value-1)}>← {t("occupancy.previous30")}</Button><Button variant="outline" onClick={()=>{setPage(0);setWholeSeason(false);}}>{t("status.today")}</Button><Button variant="outline" disabled={wholeSeason} onClick={()=>setPage(value=>value+1)}>{t("occupancy.next30")} →</Button><Button variant={wholeSeason?"default":"outline"} onClick={()=>setWholeSeason(value=>!value)}>{t("occupancy.wholeSeason")}</Button>{wholeSeason&&<label className="occupancy-free-toggle"><input type="checkbox" checked={showFree} onChange={e=>setShowFree(e.target.checked)}/>{t("occupancy.showFree")}</label>}</div><div className="occupancy-list">{days.length?days.map(day=>{const busy=day.matches.length+day.bookings.length>0;return <div className="day" key={day.key}><div><b>{new Intl.DateTimeFormat(locale,{weekday:"short"}).format(day.d)}</b><span>{formatDate(day.key,false,locale)}</span></div><Status busy={busy} t={t}/><div>{busy?<>{day.matches.map(m=><span key={m.id}>{m.time||"—"} · {m.home} — {m.away}<small>{m.competition}</small></span>)}{day.bookings.map(b=><span key={b.id}>{b.startTime||"—"} · {b.title}<small>{t("booking.label")}{b.organizer?` · ${b.organizer}`:""}</small></span>)}</>:"—"}</div></div>}):<Empty>{t("occupancy.empty")}</Empty>}</div><DialogFooter><Button variant="outline" onClick={onClose}>{t("action.close")}</Button></DialogFooter></DialogContent></Dialog>;
 }
 
 function LoginDialog({open,onClose,onNotice,t}:{open:boolean;onClose:()=>void;onNotice:(s:string)=>void;t:Translator}){
