@@ -152,6 +152,8 @@ Ako primijetite pogrešan termin, tim ili lokaciju, javite se kapetanu ekipe ili
 
 Gumb **Mastersi** otvara zajednički kalendar službenih HPS i PSGZ natjecanja. Moguće je odvojiti elektronski pikado od klasičnog/steel pikada te prikazati i prošle događaje. Podaci sadrže poveznicu na službeni izvor. Ako novi HPS raspored još nije objavljen, aplikacija ga ne pokušava nagađati; administrator može događaj dodati ručno ili ga preuzeti nakon objave.
 
+Administrator u istom prozoru može odabrati **Provjeri sada**. Aplikacija prikazuje koliko je službenih događaja novo, promijenjeno ili nepromijenjeno, a u bazu se upisuju tek nakon potvrde. GitHub Actions posao `check-official-events.yml` provjerava izvore jednom dnevno i mijenja službenu snimku samo kada pronađe stvarnu razliku.
+
 ## Projekt
 
 Izvorni kod: [github.com/Tanks04/DartsSchedule](https://github.com/Tanks04/DartsSchedule)

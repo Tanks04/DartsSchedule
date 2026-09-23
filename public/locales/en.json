@@ -133,5 +133,19 @@
   "events.showPast": "Show past events",
   "events.timeTba": "Time to be announced",
   "events.source": "Official source",
-  "events.empty": "No events match the selected filters."
+  "events.empty": "No events match the selected filters.",
+  "events.officialCheck": "Official schedule check",
+  "events.checkDescription": "Compare HPS and PSGZ sources with the app before importing.",
+  "events.check": "Check now",
+  "events.checking": "Checking…",
+  "events.generated": "Official source checked: {date}",
+  "events.checkError": "Official schedule check failed: {error}",
+  "events.newCount": "New: {count}",
+  "events.changedCount": "Changed: {count}",
+  "events.sameCount": "Unchanged: {count}",
+  "events.new": "NEW",
+  "events.changed": "CHANGED",
+  "events.apply": "Confirm and import ({count})",
+  "events.applying": "Importing…",
+  "events.applied": "Imported {count} new or changed events."
 }

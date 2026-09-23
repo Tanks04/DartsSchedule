@@ -133,5 +133,19 @@
   "events.showPast": "Vergangene anzeigen",
   "events.timeTba": "Uhrzeit noch offen",
   "events.source": "Offizielle Quelle",
-  "events.empty": "Keine Veranstaltungen für die gewählten Filter."
+  "events.empty": "Keine Veranstaltungen für die gewählten Filter.",
+  "events.officialCheck": "Offiziellen Kalender prüfen",
+  "events.checkDescription": "HPS- und PSGZ-Quellen vor dem Import mit der App vergleichen.",
+  "events.check": "Jetzt prüfen",
+  "events.checking": "Wird geprüft…",
+  "events.generated": "Offizielle Quelle geprüft: {date}",
+  "events.checkError": "Prüfung fehlgeschlagen: {error}",
+  "events.newCount": "Neu: {count}",
+  "events.changedCount": "Geändert: {count}",
+  "events.sameCount": "Unverändert: {count}",
+  "events.new": "NEU",
+  "events.changed": "GEÄNDERT",
+  "events.apply": "Bestätigen und importieren ({count})",
+  "events.applying": "Import läuft…",
+  "events.applied": "{count} neue oder geänderte Veranstaltungen wurden importiert."
 }

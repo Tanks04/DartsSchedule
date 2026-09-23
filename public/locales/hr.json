@@ -133,5 +133,19 @@
   "events.showPast": "Prikaži prošle",
   "events.timeTba": "Vrijeme nije objavljeno",
   "events.source": "Službeni izvor",
-  "events.empty": "Nema događaja za odabrane filtre."
+  "events.empty": "Nema događaja za odabrane filtre.",
+  "events.officialCheck": "Provjera službenog rasporeda",
+  "events.checkDescription": "Usporedite HPS i PSGZ izvore s podacima u aplikaciji prije upisa.",
+  "events.check": "Provjeri sada",
+  "events.checking": "Provjeravam…",
+  "events.generated": "Službeni izvor provjeren: {date}",
+  "events.checkError": "Provjera službenog rasporeda nije uspjela: {error}",
+  "events.newCount": "Novo: {count}",
+  "events.changedCount": "Promijenjeno: {count}",
+  "events.sameCount": "Bez promjene: {count}",
+  "events.new": "NOVO",
+  "events.changed": "PROMIJENJENO",
+  "events.apply": "Potvrdi i upiši ({count})",
+  "events.applying": "Upisujem…",
+  "events.applied": "Upisano je {count} novih ili promijenjenih događaja."
 }
