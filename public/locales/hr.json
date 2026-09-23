@@ -147,6 +147,18 @@
   "events.changed": "PROMIJENJENO",
   "events.apply": "Potvrdi i upiši ({count})",
   "events.cancelImport": "Odustani",
+  "events.changedFields": "Razlika",
+  "events.field.eventDate": "datum",
+  "events.field.endDate": "završni datum",
+  "events.field.startTime": "vrijeme",
+  "events.field.title": "naziv",
+  "events.field.discipline": "vrsta",
+  "events.field.category": "kategorija",
+  "events.field.venueName": "lokacija",
+  "events.field.address": "adresa",
+  "events.field.city": "grad",
+  "events.field.sourceUrl": "izvor",
+  "events.field.note": "napomena",
   "events.applying": "Upisujem…",
   "events.applied": "Upisano je {count} novih ili promijenjenih događaja."
 }

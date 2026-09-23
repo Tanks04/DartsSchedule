@@ -7,6 +7,7 @@ export type Translator = (key: string, vars?: Record<string, string | number>) =
 
 const preferenceKey = "dartsScheduler.language";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const localeVersion = "10.1.1";
 
 export function useI18n() {
   const [languages, setLanguages] = useState<LanguageDefinition[]>([
@@ -22,14 +23,14 @@ export function useI18n() {
     const saved = localStorage.getItem(preferenceKey);
     const browser = navigator.language.toLowerCase();
     setLanguageState(saved || (browser.startsWith("hr") ? "hr" : browser.startsWith("de") ? "de" : "en"));
-    fetch(`${basePath}/locales/languages.json`).then(async r => r.ok ? await r.json() as LanguageDefinition[] : Promise.reject()).then(value => setLanguages(value)).catch(() => undefined);
-    fetch(`${basePath}/locales/en.json`).then(async r => await r.json() as Record<string, string>).then(value => setFallback(value)).catch(() => undefined);
+    fetch(`${basePath}/locales/languages.json?v=${localeVersion}`, { cache: "no-store" }).then(async r => r.ok ? await r.json() as LanguageDefinition[] : Promise.reject()).then(value => setLanguages(value)).catch(() => undefined);
+    fetch(`${basePath}/locales/en.json?v=${localeVersion}`, { cache: "no-store" }).then(async r => await r.json() as Record<string, string>).then(value => setFallback(value)).catch(() => undefined);
   }, []);
 
   useEffect(() => {
     const definition = languages.find(item => item.code === language) || languages.find(item => item.code === "en");
     if (!definition) return;
-    fetch(`${basePath}/locales/${definition.file}`).then(async r => r.ok ? await r.json() as Record<string, string> : Promise.reject()).then(value => setMessages(value)).catch(() => setMessages(fallback));
+    fetch(`${basePath}/locales/${definition.file}?v=${localeVersion}`, { cache: "no-store" }).then(async r => r.ok ? await r.json() as Record<string, string> : Promise.reject()).then(value => setMessages(value)).catch(() => setMessages(fallback));
     document.documentElement.lang = definition.code;
   }, [language, languages, fallback]);
 

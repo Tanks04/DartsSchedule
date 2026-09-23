@@ -147,6 +147,18 @@
   "events.changed": "CHANGED",
   "events.apply": "Confirm and import ({count})",
   "events.cancelImport": "Cancel",
+  "events.changedFields": "Difference",
+  "events.field.eventDate": "date",
+  "events.field.endDate": "end date",
+  "events.field.startTime": "time",
+  "events.field.title": "title",
+  "events.field.discipline": "discipline",
+  "events.field.category": "category",
+  "events.field.venueName": "venue",
+  "events.field.address": "address",
+  "events.field.city": "city",
+  "events.field.sourceUrl": "source",
+  "events.field.note": "note",
   "events.applying": "Importing…",
   "events.applied": "Imported {count} new or changed events."
 }

@@ -147,6 +147,18 @@
   "events.changed": "GEÄNDERT",
   "events.apply": "Bestätigen und importieren ({count})",
   "events.cancelImport": "Abbrechen",
+  "events.changedFields": "Unterschied",
+  "events.field.eventDate": "Datum",
+  "events.field.endDate": "Enddatum",
+  "events.field.startTime": "Uhrzeit",
+  "events.field.title": "Name",
+  "events.field.discipline": "Dartart",
+  "events.field.category": "Kategorie",
+  "events.field.venueName": "Spielort",
+  "events.field.address": "Adresse",
+  "events.field.city": "Ort",
+  "events.field.sourceUrl": "Quelle",
+  "events.field.note": "Notiz",
   "events.applying": "Import läuft…",
   "events.applied": "{count} neue oder geänderte Veranstaltungen wurden importiert."
 }
