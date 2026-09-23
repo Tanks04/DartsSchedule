@@ -146,6 +146,7 @@
   "events.new": "NEU",
   "events.changed": "GEÄNDERT",
   "events.apply": "Bestätigen und importieren ({count})",
+  "events.cancelImport": "Abbrechen",
   "events.applying": "Import läuft…",
   "events.applied": "{count} neue oder geänderte Veranstaltungen wurden importiert."
 }

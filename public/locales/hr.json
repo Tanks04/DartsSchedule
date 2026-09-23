@@ -146,6 +146,7 @@
   "events.new": "NOVO",
   "events.changed": "PROMIJENJENO",
   "events.apply": "Potvrdi i upiši ({count})",
+  "events.cancelImport": "Odustani",
   "events.applying": "Upisujem…",
   "events.applied": "Upisano je {count} novih ili promijenjenih događaja."
 }

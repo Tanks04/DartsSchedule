@@ -146,6 +146,7 @@
   "events.new": "NEW",
   "events.changed": "CHANGED",
   "events.apply": "Confirm and import ({count})",
+  "events.cancelImport": "Cancel",
   "events.applying": "Importing…",
   "events.applied": "Imported {count} new or changed events."
 }
