@@ -120,5 +120,18 @@
   "archive.noReason": "Razlog nije upisan",
   "archive.confirmTeam": "Arhivirati tim {name}? Stare utakmice ostaju sačuvane, a buduće se više neće računati u zauzetost.",
   "archive.confirmClub": "Arhivirati klub {name} i sve njegove aktivne timove? Povijest utakmica ostaje sačuvana.",
-  "archive.confirmRemoveLeague": "Ukloniti tim {name} iz lige {league}? Tim i njegove postojeće utakmice neće biti obrisani."
+  "archive.confirmRemoveLeague": "Ukloniti tim {name} iz lige {league}? Tim i njegove postojeće utakmice neće biti obrisani.",
+  "events.action": "Mastersi",
+  "events.title": "Mastersi i događaji",
+  "events.description": "Službeni HPS i PSGZ kalendar. Filtrirajte organizatora i vrstu pikada.",
+  "events.organizer": "Organizator",
+  "events.discipline": "Vrsta pikada",
+  "events.all": "Sve",
+  "events.electronic": "Elektronski",
+  "events.classic": "Klasični / steel",
+  "events.mixed": "Mješovito",
+  "events.showPast": "Prikaži prošle",
+  "events.timeTba": "Vrijeme nije objavljeno",
+  "events.source": "Službeni izvor",
+  "events.empty": "Nema događaja za odabrane filtre."
 }

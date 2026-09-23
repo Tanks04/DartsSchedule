@@ -8,7 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
 import { useI18n, type Translator, type LanguageDefinition } from "@/lib/i18n";
-import { actualVenue, dateKey, formatDate, normalizeHeader, seedData, type Booking, type Club, type Competition, type Match, type Organization, type SchedulerData, type Team, type Venue } from "@/lib/darts-data";
+import { actualVenue, dateKey, formatDate, normalizeHeader, seedData, type Booking, type CalendarEvent, type Club, type Competition, type Match, type Organization, type SchedulerData, type Team, type Venue } from "@/lib/darts-data";
 
 type AppRole = "viewer" | "captain" | "club_manager" | "organization_admin" | "platform_admin";
 type Captain = { email: string; user_id: string | null; team_id: string; team_name: string };
@@ -45,6 +45,7 @@ export default function Home() {
   const [organizationsOpen, setOrganizationsOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [occupancyOpen, setOccupancyOpen] = useState(false);
+  const [eventsOpen, setEventsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -61,7 +62,7 @@ export default function Home() {
   const loadData = useCallback(async () => {
     if (!supabase) return;
     setLoading(true);
-    const [organizationsR,seasonsR,competitionsR,venuesR,teamsR,membershipR,matchesR,changesR,clubsR,clubVenuesR,bookingsR] = await Promise.all([
+    const [organizationsR,seasonsR,competitionsR,venuesR,teamsR,membershipR,matchesR,changesR,clubsR,clubVenuesR,bookingsR,eventsR] = await Promise.all([
       supabase.from("organizations").select("*").eq("is_active",true).order("name"),
       supabase.from("seasons").select("*").order("name",{ascending:false}),
       supabase.from("competitions").select("*").order("name"),
@@ -73,10 +74,11 @@ export default function Home() {
       supabase.from("clubs").select("*").order("name"),
       supabase.from("club_venues").select("club_id,venue_id"),
       supabase.from("venue_bookings").select("*").order("event_date").order("start_time"),
+      supabase.from("calendar_events").select("*").order("event_date").order("start_time"),
     ]);
-    const migrationError = organizationsR.error || bookingsR.error;
+    const migrationError = organizationsR.error || bookingsR.error || eventsR.error;
     if (migrationError) {
-      setNotice("Baza još nije nadograđena na v7. Pokrenite supabase/upgrade_v7_organizations.sql.");
+      setNotice(eventsR.error?"Baza još nije nadograđena na v9. Pokrenite supabase/upgrade_v9_events.sql.":"Baza još nije nadograđena na v7. Pokrenite supabase/upgrade_v7_organizations.sql.");
       setLoading(false);
       return;
     }
@@ -97,7 +99,8 @@ export default function Home() {
     const matchMap=new Map(matches.map(m=>[m.id,m]));
     const changes=(changesR.data??[]).map(c=>{const m=matchMap.get(c.match_id);return{id:c.id,matchId:c.match_id,changedAt:c.changed_at,changedBy:c.changed_by,oldDate:c.old_date,newDate:c.new_date,oldTime:String(c.old_time??"").slice(0,5),newTime:String(c.new_time??"").slice(0,5),competition:m?.competition??"",home:m?.home??"",away:m?.away??""};});
     const bookings:Booking[]=(bookingsR.data??[]).map(b=>({id:b.id,organizationId:b.organization_id,venueId:b.venue_id,date:b.event_date,startTime:String(b.start_time??"").slice(0,5),endTime:String(b.end_time??"").slice(0,5),title:b.title,organizer:b.organizer,note:b.note}));
-    setData({organizations,seasons:(seasonsR.data??[]).map(s=>({id:s.id,organizationId:s.organization_id,name:s.name,active:s.is_active})),competitions,clubs,venues,teams,matches,changes,bookings});
+    const events:CalendarEvent[]=(eventsR.data??[]).map(e=>({id:e.id,organizationId:e.organization_id??"",eventDate:e.event_date,endDate:e.end_date??"",startTime:String(e.start_time??"").slice(0,5),title:e.title,organizer:e.organizer,discipline:e.discipline,category:e.category,venueName:e.venue_name,address:e.address,city:e.city,sourceUrl:e.source_url,externalId:e.external_id,note:e.note}));
+    setData({organizations,seasons:(seasonsR.data??[]).map(s=>({id:s.id,organizationId:s.organization_id,name:s.name,active:s.is_active})),competitions,clubs,venues,teams,matches,changes,bookings,events});
     setLoading(false);
   },[t]);
 
@@ -141,6 +144,7 @@ export default function Home() {
     matches:data.matches.filter(x=>x.organizationId===organizationId),
     changes:data.changes.filter(c=>data.matches.find(m=>m.id===c.matchId)?.organizationId===organizationId),
     bookings:data.bookings.filter(x=>x.organizationId===organizationId),
+    events:data.events,
   }),[data,organizationId]);
   const activeTeams=useMemo(()=>orgData.teams.filter(team=>team.active),[orgData.teams]);
   const activeClubs=useMemo(()=>orgData.clubs.filter(club=>club.active),[orgData.clubs]);
@@ -202,6 +206,7 @@ export default function Home() {
       {editor&&<Button variant="ghost" onClick={()=>setImportOpen(true)}><Upload/>{t("action.import")}</Button>}
       {editor&&<Button variant="ghost" onClick={()=>void exportExcel()}><Download/>{t("action.export")}</Button>}
       <Button variant="ghost" onClick={()=>setSettingsOpen(true)}><Settings/>{t("action.settings")}</Button>
+      <Button variant="ghost" onClick={()=>setEventsOpen(true)}><CalendarDays/>{t("events.action")}</Button>
       {organizationAdmin&&<Button variant="outline" onClick={()=>setPermissionsOpen(true)}><UserCog/>{t("action.permissions")}</Button>}
       {platformAdmin&&<Button variant="outline" onClick={()=>setOrganizationsOpen(true)}><Building2/>{t("action.organizations")}</Button>}
       {sessionEmail?<Button variant="ghost" onClick={()=>supabase?.auth.signOut()}><LogOut/>{t("action.logout")}</Button>:<Button variant="ghost" onClick={()=>setLoginOpen(true)}><LogIn/>{t("action.login")}</Button>}
@@ -218,10 +223,11 @@ export default function Home() {
     </section>
 
     <LoginDialog open={loginOpen} onClose={()=>setLoginOpen(false)} onNotice={setNotice} t={t}/>
-    <MobileMenuDialog open={mobileMenuOpen} onClose={()=>setMobileMenuOpen(false)} editor={editor} organizationAdmin={organizationAdmin} platformAdmin={platformAdmin} signedIn={!!sessionEmail} onImport={()=>setImportOpen(true)} onExport={()=>void exportExcel()} onSettings={()=>setSettingsOpen(true)} onPermissions={()=>setPermissionsOpen(true)} onOrganizations={()=>setOrganizationsOpen(true)} onLogin={()=>setLoginOpen(true)} onLogout={()=>void supabase?.auth.signOut()} t={t}/>
+    <MobileMenuDialog open={mobileMenuOpen} onClose={()=>setMobileMenuOpen(false)} editor={editor} organizationAdmin={organizationAdmin} platformAdmin={platformAdmin} signedIn={!!sessionEmail} onEvents={()=>setEventsOpen(true)} onImport={()=>setImportOpen(true)} onExport={()=>void exportExcel()} onSettings={()=>setSettingsOpen(true)} onPermissions={()=>setPermissionsOpen(true)} onOrganizations={()=>setOrganizationsOpen(true)} onLogin={()=>setLoginOpen(true)} onLogout={()=>void supabase?.auth.signOut()} t={t}/>
     <SettingsDialog open={settingsOpen} onClose={()=>setSettingsOpen(false)} organizations={data.organizations} organizationId={organizationId} onOrganization={selectOrganization} seasons={orgData.seasons} competitions={orgData.competitions} teams={activeTeams} competitionId={competitionId} teamId={teamId} onCompetition={selectCompetition} onTeam={selectTeam} languages={languages} language={language} onLanguage={setLanguage} t={t}/>
     <ScheduleDialog open={scheduleOpen} onClose={()=>setScheduleOpen(false)} team={selectedTeam} matches={teamMatches} teams={orgData.teams} canEdit={canEditMatch} onEdit={setEditing} t={t} locale={locale}/>
     <OccupancyDialog open={occupancyOpen} onClose={()=>setOccupancyOpen(false)} venue={selectedVenue} matches={venueMatches} bookings={venueBookings} t={t} locale={locale}/>
+    <EventsDialog open={eventsOpen} onClose={()=>setEventsOpen(false)} events={data.events} t={t} locale={locale}/>
     <ImportDialog open={importOpen} onClose={()=>setImportOpen(false)} data={orgData} organizationId={organizationId} admin={organizationAdmin} editableTeams={editableTeams} managedClubIds={managedClubIds} onSaved={async count=>{setImportOpen(false);setNotice(t("import.saved",{count}));await loadData();}} onNotice={setNotice} t={t}/>
     <EditMatchDialog match={editing} venues={orgData.venues} onClose={()=>setEditing(null)} onSaved={async()=>{setEditing(null);await loadData();}} onNotice={setNotice} t={t}/>
     <EditTeamDialog team={editingTeam} venues={orgData.venues} clubs={activeClubs} competitionId={competitionId} competitionName={orgData.competitions.find(c=>c.id===competitionId)?.name??""} admin={organizationAdmin} onClose={()=>setEditingTeam(null)} onSaved={async()=>{setEditingTeam(null);await loadData();}} onNotice={setNotice} t={t}/>
@@ -236,9 +242,17 @@ export default function Home() {
 
 function Empty({children}:{children:React.ReactNode}){return <div className="empty">{children}</div>}
 
-function MobileMenuDialog({open,onClose,editor,organizationAdmin,platformAdmin,signedIn,onImport,onExport,onSettings,onPermissions,onOrganizations,onLogin,onLogout,t}:{open:boolean;onClose:()=>void;editor:boolean;organizationAdmin:boolean;platformAdmin:boolean;signedIn:boolean;onImport:()=>void;onExport:()=>void;onSettings:()=>void;onPermissions:()=>void;onOrganizations:()=>void;onLogin:()=>void;onLogout:()=>void;t:Translator}){
+function MobileMenuDialog({open,onClose,editor,organizationAdmin,platformAdmin,signedIn,onEvents,onImport,onExport,onSettings,onPermissions,onOrganizations,onLogin,onLogout,t}:{open:boolean;onClose:()=>void;editor:boolean;organizationAdmin:boolean;platformAdmin:boolean;signedIn:boolean;onEvents:()=>void;onImport:()=>void;onExport:()=>void;onSettings:()=>void;onPermissions:()=>void;onOrganizations:()=>void;onLogin:()=>void;onLogout:()=>void;t:Translator}){
   const run=(action:()=>void)=>{onClose();action();};
-  return <Dialog open={open} onOpenChange={value=>!value&&onClose()}><DialogContent className="mobile-nav-dialog"><DialogHeader><DialogTitle>{t("action.menu")}</DialogTitle><DialogDescription>{t("mobileMenu.description")}</DialogDescription></DialogHeader><div className="mobile-nav-actions"><Button variant="outline" onClick={()=>run(onSettings)}><Settings/>{t("action.settings")}</Button>{editor&&<Button variant="outline" onClick={()=>run(onImport)}><Upload/>{t("action.import")}</Button>}{editor&&<Button variant="outline" onClick={()=>run(onExport)}><Download/>{t("action.export")}</Button>}{organizationAdmin&&<Button variant="outline" onClick={()=>run(onPermissions)}><UserCog/>{t("action.permissions")}</Button>}{platformAdmin&&<Button variant="outline" onClick={()=>run(onOrganizations)}><Building2/>{t("action.organizations")}</Button>}{signedIn?<Button variant="outline" onClick={()=>run(onLogout)}><LogOut/>{t("action.logout")}</Button>:<Button variant="outline" onClick={()=>run(onLogin)}><LogIn/>{t("action.login")}</Button>}</div><DialogFooter><Button variant="outline" onClick={onClose}>{t("action.close")}</Button></DialogFooter></DialogContent></Dialog>;
+  return <Dialog open={open} onOpenChange={value=>!value&&onClose()}><DialogContent className="mobile-nav-dialog"><DialogHeader><DialogTitle>{t("action.menu")}</DialogTitle><DialogDescription>{t("mobileMenu.description")}</DialogDescription></DialogHeader><div className="mobile-nav-actions"><Button variant="outline" onClick={()=>run(onEvents)}><CalendarDays/>{t("events.action")}</Button><Button variant="outline" onClick={()=>run(onSettings)}><Settings/>{t("action.settings")}</Button>{editor&&<Button variant="outline" onClick={()=>run(onImport)}><Upload/>{t("action.import")}</Button>}{editor&&<Button variant="outline" onClick={()=>run(onExport)}><Download/>{t("action.export")}</Button>}{organizationAdmin&&<Button variant="outline" onClick={()=>run(onPermissions)}><UserCog/>{t("action.permissions")}</Button>}{platformAdmin&&<Button variant="outline" onClick={()=>run(onOrganizations)}><Building2/>{t("action.organizations")}</Button>}{signedIn?<Button variant="outline" onClick={()=>run(onLogout)}><LogOut/>{t("action.logout")}</Button>:<Button variant="outline" onClick={()=>run(onLogin)}><LogIn/>{t("action.login")}</Button>}</div><DialogFooter><Button variant="outline" onClick={onClose}>{t("action.close")}</Button></DialogFooter></DialogContent></Dialog>;
+}
+
+function EventsDialog({open,onClose,events,t,locale}:{open:boolean;onClose:()=>void;events:CalendarEvent[];t:Translator;locale:string}){
+  const[organizer,setOrganizer]=useState("all");const[discipline,setDiscipline]=useState("all");const[showPast,setShowPast]=useState(false);const today=dateKey(new Date());
+  useEffect(()=>{if(open){setOrganizer("all");setDiscipline("all");setShowPast(false);}},[open]);
+  const organizers=Array.from(new Set(events.map(event=>event.organizer))).sort();
+  const filtered=events.filter(event=>(organizer==="all"||event.organizer===organizer)&&(discipline==="all"||event.discipline===discipline)&&(showPast||event.eventDate>=today)).sort((a,b)=>a.eventDate.localeCompare(b.eventDate)||a.startTime.localeCompare(b.startTime));
+  return <Dialog open={open} onOpenChange={value=>!value&&onClose()}><DialogContent className="events-dialog"><DialogHeader><DialogTitle>{t("events.title")}</DialogTitle><DialogDescription>{t("events.description")}</DialogDescription></DialogHeader><div className="events-toolbar"><label>{t("events.organizer")}<NativeSelect value={organizer} onChange={e=>setOrganizer(e.target.value)}><NativeSelectOption value="all">{t("events.all")}</NativeSelectOption>{organizers.map(value=><NativeSelectOption key={value} value={value}>{value}</NativeSelectOption>)}</NativeSelect></label><label>{t("events.discipline")}<NativeSelect value={discipline} onChange={e=>setDiscipline(e.target.value)}><NativeSelectOption value="all">{t("events.all")}</NativeSelectOption><NativeSelectOption value="electronic">{t("events.electronic")}</NativeSelectOption><NativeSelectOption value="classic">{t("events.classic")}</NativeSelectOption></NativeSelect></label><label className="events-past"><input type="checkbox" checked={showPast} onChange={e=>setShowPast(e.target.checked)}/>{t("events.showPast")}</label></div><div className="events-list">{filtered.length?filtered.map(event=><article className="calendar-event" key={event.id}><div className="event-date"><b>{formatDate(event.eventDate,false,locale)}</b><span>{event.startTime||t("events.timeTba")}</span></div><div><h3>{event.title}</h3><p>{event.organizer} · {t(`events.${event.discipline}`)}{event.category?` · ${event.category}`:""}</p>{(event.venueName||event.city)&&<small><MapPin/>{[event.venueName,event.address,event.city].filter(Boolean).join(", ")}</small>}</div>{event.sourceUrl&&<a href={event.sourceUrl} target="_blank" rel="noreferrer">{t("events.source")}</a>}</article>):<Empty>{t("events.empty")}</Empty>}</div><DialogFooter><Button variant="outline" onClick={onClose}>{t("action.close")}</Button></DialogFooter></DialogContent></Dialog>;
 }
 function MatchRow({match,venue,editable,onEdit,t,locale}:{match:Match;venue:string;editable:boolean;onEdit:()=>void;t:Translator;locale:string}){return <article className="match"><div className="when"><b>{formatDate(match.date,false,locale)}</b><span>{match.time||"—"}</span></div><div><b>{match.home}</b><span> — </span><b>{match.away}</b><small><MapPin/>{venue||t("location.unspecified")}</small></div><em>{[match.competition,match.round].filter(Boolean).join(" · ")}</em>{editable&&<Button variant="ghost" size="icon" onClick={onEdit}><Edit3/></Button>}</article>}
 

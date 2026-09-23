@@ -120,5 +120,18 @@
   "archive.noReason": "Kein Grund angegeben",
   "archive.confirmTeam": "Team {name} archivieren? Vergangene Spiele bleiben erhalten; zukünftige Spiele beeinflussen die Belegung nicht mehr.",
   "archive.confirmClub": "Verein {name} und alle aktiven Teams archivieren? Die Spielhistorie bleibt erhalten.",
-  "archive.confirmRemoveLeague": "Team {name} aus {league} entfernen? Team und bestehende Spiele werden nicht gelöscht."
+  "archive.confirmRemoveLeague": "Team {name} aus {league} entfernen? Team und bestehende Spiele werden nicht gelöscht.",
+  "events.action": "Masters",
+  "events.title": "Masters und Veranstaltungen",
+  "events.description": "Offizieller HPS- und PSGZ-Kalender. Nach Veranstalter und Dartart filtern.",
+  "events.organizer": "Veranstalter",
+  "events.discipline": "Dartart",
+  "events.all": "Alle",
+  "events.electronic": "Elektronisch",
+  "events.classic": "Klassisch / Steel",
+  "events.mixed": "Gemischt",
+  "events.showPast": "Vergangene anzeigen",
+  "events.timeTba": "Uhrzeit noch offen",
+  "events.source": "Offizielle Quelle",
+  "events.empty": "Keine Veranstaltungen für die gewählten Filter."
 }

@@ -9,6 +9,7 @@ U aplikaciji možete:
 - pregledati sljedeću utakmicu i cijeli raspored ekipe;
 - provjeriti kada je određeno mjesto slobodno ili zauzeto;
 - vidjeti utakmice svih liga koje se igraju na istoj lokaciji;
+- otvoriti poseban kalendar HPS i PSGZ Mastersa, filtriran po organizatoru i vrsti pikada;
 - otvoriti adresu i kontaktne podatke kluba kada su dostupni.
 - koristiti sučelje na hrvatskom, engleskom ili njemačkom jeziku.
 
@@ -147,6 +148,12 @@ Početni rasporedi preuzeti su sa službene stranice Pikado saveza Grada Zagreba
 
 Ako primijetite pogrešan termin, tim ili lokaciju, javite se kapetanu ekipe ili administratoru aplikacije.
 
+## Mastersi i događaji
+
+Gumb **Mastersi** otvara zajednički kalendar službenih HPS i PSGZ natjecanja. Moguće je odvojiti elektronski pikado od klasičnog/steel pikada te prikazati i prošle događaje. Podaci sadrže poveznicu na službeni izvor. Ako novi HPS raspored još nije objavljen, aplikacija ga ne pokušava nagađati; administrator može događaj dodati ručno ili ga preuzeti nakon objave.
+
 ## Projekt
 
 Izvorni kod: [github.com/Tanks04/DartsSchedule](https://github.com/Tanks04/DartsSchedule)
+
+Potpune upute za instalaciju, nadogradnju, backup i oporavak nalaze se u [`COOKBOOK.md`](COOKBOOK.md).

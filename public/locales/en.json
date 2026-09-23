@@ -120,5 +120,18 @@
   "archive.noReason": "No reason entered",
   "archive.confirmTeam": "Archive team {name}? Past matches will be preserved and future matches will no longer affect occupancy.",
   "archive.confirmClub": "Archive club {name} and all its active teams? Match history will be preserved.",
-  "archive.confirmRemoveLeague": "Remove team {name} from {league}? The team and its existing matches will not be deleted."
+  "archive.confirmRemoveLeague": "Remove team {name} from {league}? The team and its existing matches will not be deleted.",
+  "events.action": "Masters",
+  "events.title": "Masters and events",
+  "events.description": "Official HPS and PSGZ calendar. Filter by organizer and darts discipline.",
+  "events.organizer": "Organizer",
+  "events.discipline": "Darts discipline",
+  "events.all": "All",
+  "events.electronic": "Electronic",
+  "events.classic": "Classic / steel",
+  "events.mixed": "Mixed",
+  "events.showPast": "Show past events",
+  "events.timeTba": "Time to be announced",
+  "events.source": "Official source",
+  "events.empty": "No events match the selected filters."
 }

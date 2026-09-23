@@ -24,9 +24,14 @@ export type Booking = {
   id: string; organizationId: string; venueId: string; date: string; startTime: string;
   endTime: string; title: string; organizer: string; note: string;
 };
+export type CalendarEvent = {
+  id: string; organizationId: string; eventDate: string; endDate: string; startTime: string;
+  title: string; organizer: string; discipline: "electronic" | "classic" | "mixed";
+  category: string; venueName: string; address: string; city: string; sourceUrl: string; externalId: string; note: string;
+};
 export type SchedulerData = {
   organizations: Organization[]; seasons: Season[]; competitions: Competition[]; matches: Match[];
-  clubs: Club[]; teams: Team[]; venues: Venue[]; changes: Change[]; bookings: Booking[];
+  clubs: Club[]; teams: Team[]; venues: Venue[]; changes: Change[]; bookings: Booking[]; events: CalendarEvent[];
 };
 
 export const seedData: SchedulerData = {
@@ -36,7 +41,7 @@ export const seedData: SchedulerData = {
     "1. LIGA", "2. LIGA", "3. LIGA SKUPINA A", "3. LIGA SKUPINA B",
     "4. LIGA SKUPINA A", "4. LIGA SKUPINA B", "4. LIGA SKUPINA C", "KLASIČNA LIGA", "SENIORKE",
   ].map((name, i) => ({ id: `competition-${i + 1}`, organizationId: "org-psgz", seasonId: "season-2026", name, externalId: String(815 + i) })),
-  matches: [], changes: [], bookings: [],
+  matches: [], changes: [], bookings: [], events: [],
   clubs: [{ id: "club-a1", organizationId: "org-psgz", name: "PK A1", contact: "Željko Žitnik", phone: "", email: "", note: "", venueIds: ["venue-a1"], active: true, archivedAt: "", archivedReason: "" }],
   teams: [
     { id: "team-a1", organizationId: "org-psgz", name: "A1", clubId: "club-a1", club: "PK A1", defaultVenueId: "venue-a1", defaultVenue: "A1 – Cirkovci 72", contact: "", phone: "", email: "", note: "", competitionIds: ["competition-1"], active: true, archivedAt: "", archivedReason: "" },
