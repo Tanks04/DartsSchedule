@@ -1,0 +1,40 @@
+name: Check official darts events
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * *"
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Read HPS and PSGZ calendars
+        run: node scripts/sync-official-events.mjs
+      - name: Commit changed official snapshot
+        id: update
+        run: |
+          if git diff --quiet -- public/data/official-events.json; then
+            echo "No official calendar changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/official-events.json
+          git commit -m "chore: update official darts events"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Deploy changed calendar
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref "$GITHUB_REF_NAME"
