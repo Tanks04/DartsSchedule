@@ -15,6 +15,8 @@ U aplikaciji možete:
 
 Aplikacija pamti odabranu ligu, tim i lokaciju na vašem uređaju. Pri sljedećem otvaranju odmah prikazuje raspored koji pratite.
 
+Možete uključiti i lokalne obavijesti za jedan tim ili cijeli klub te za nadolazeće Masterse. One se provjeravaju samo kada otvorite aplikaciju; DartsScheduler ne radi u pozadini. Pojedinu obavijest moguće je označiti pročitanom ili trajno utišati na tom uređaju.
+
 ## Otvori aplikaciju
 
 **[Pokreni DartsScheduler](https://tanks04.github.io/DartsSchedule/)**

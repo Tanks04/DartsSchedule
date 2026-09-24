@@ -7,7 +7,7 @@ export type Translator = (key: string, vars?: Record<string, string | number>) =
 
 const preferenceKey = "dartsScheduler.language";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-const localeVersion = "10.1.1";
+const localeVersion = "10.3.0";
 
 export function useI18n() {
   const [languages, setLanguages] = useState<LanguageDefinition[]>([
