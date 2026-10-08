@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-09-23T20:33:56.148Z",
+  "generatedAt": "2026-10-08T12:04:03.036Z",
   "sources": [
     {
       "name": "HPS",
       "ok": true,
-      "count": 10
+      "count": 5
     },
     {
       "name": "PSGZ",
@@ -13,156 +13,6 @@
     }
   ],
   "events": [
-    {
-      "externalId": "hps-2025-26-m1-e",
-      "eventDate": "2025-10-18",
-      "endDate": "",
-      "startTime": "",
-      "title": "1. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "electronic",
-      "category": "Svi",
-      "venueName": "Sportska dvorana Žatika",
-      "address": "",
-      "city": "Poreč",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m1-c",
-      "eventDate": "2025-10-19",
-      "endDate": "",
-      "startTime": "",
-      "title": "1. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "classic",
-      "category": "Svi",
-      "venueName": "Sportska dvorana Žatika",
-      "address": "",
-      "city": "Poreč",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m2-e",
-      "eventDate": "2025-11-29",
-      "endDate": "",
-      "startTime": "",
-      "title": "2. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "electronic",
-      "category": "Svi",
-      "venueName": "Apfel Arena",
-      "address": "Put Volicije 5, 21300 Makarska",
-      "city": "Makarska",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m2-c",
-      "eventDate": "2025-11-30",
-      "endDate": "",
-      "startTime": "",
-      "title": "2. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "classic",
-      "category": "Svi",
-      "venueName": "Apfel Arena",
-      "address": "Put Volicije 5, 21300 Makarska",
-      "city": "Makarska",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m3-e",
-      "eventDate": "2026-01-17",
-      "endDate": "",
-      "startTime": "",
-      "title": "3. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "electronic",
-      "category": "Svi",
-      "venueName": "OŠ Pavao Belas",
-      "address": "Ulica Ilije Gregorića 28, 10291 Brdovec",
-      "city": "Brdovec",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m3-c",
-      "eventDate": "2026-01-18",
-      "endDate": "",
-      "startTime": "",
-      "title": "3. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "classic",
-      "category": "Svi",
-      "venueName": "OŠ Pavao Belas",
-      "address": "Ulica Ilije Gregorića 28, 10291 Brdovec",
-      "city": "Brdovec",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m4-e",
-      "eventDate": "2026-02-28",
-      "endDate": "",
-      "startTime": "",
-      "title": "4. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "electronic",
-      "category": "Svi",
-      "venueName": "Sportska dvorana Zemunik",
-      "address": "Ulica XVII 1A, Zemunik Donji",
-      "city": "Zemunik Donji",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m4-c",
-      "eventDate": "2026-03-01",
-      "endDate": "",
-      "startTime": "",
-      "title": "4. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "classic",
-      "category": "Svi",
-      "venueName": "Sportska dvorana Zemunik",
-      "address": "Ulica XVII 1A, Zemunik Donji",
-      "city": "Zemunik Donji",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m5-e",
-      "eventDate": "2026-04-11",
-      "endDate": "",
-      "startTime": "",
-      "title": "5. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "electronic",
-      "category": "Svi",
-      "venueName": "OŠ Vidovec",
-      "address": "Školska ulica 4, 42205 Vidovec",
-      "city": "Vidovec",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
-    {
-      "externalId": "hps-2025-26-m5-c",
-      "eventDate": "2026-04-12",
-      "endDate": "",
-      "startTime": "",
-      "title": "5. HPS Masters",
-      "organizer": "HPS",
-      "discipline": "classic",
-      "category": "Svi",
-      "venueName": "OŠ Vidovec",
-      "address": "Školska ulica 4, 42205 Vidovec",
-      "city": "Vidovec",
-      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-2025-26",
-      "note": ""
-    },
     {
       "externalId": "psgz-2026-27-c1",
       "eventDate": "2026-09-27",
@@ -251,6 +101,21 @@
       "address": "",
       "city": "",
       "sourceUrl": "https://psgz.hr/competitions",
+      "note": ""
+    },
+    {
+      "externalId": "hps-unknown-m1-c",
+      "eventDate": "2026-10-18",
+      "endDate": "",
+      "startTime": "",
+      "title": "1. HPS Masters",
+      "organizer": "HPS",
+      "discipline": "classic",
+      "category": "Svi",
+      "venueName": "Sportska dvorana Račice Magistrala 65, Vodice",
+      "address": "",
+      "city": "Vodice",
+      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-20262027",
       "note": ""
     },
     {
@@ -344,6 +209,21 @@
       "note": ""
     },
     {
+      "externalId": "hps-unknown-m2-c",
+      "eventDate": "2026-12-20",
+      "endDate": "",
+      "startTime": "",
+      "title": "2. HPS Masters",
+      "organizer": "HPS",
+      "discipline": "classic",
+      "category": "Svi",
+      "venueName": "Sportska dvorana OŠ Kraljice Jelene",
+      "address": "Put Mira 3, Solin",
+      "city": "Solin",
+      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-20262027",
+      "note": ""
+    },
+    {
       "externalId": "psgz-2026-27-c5",
       "eventDate": "2027-01-10",
       "endDate": "",
@@ -371,6 +251,21 @@
       "address": "",
       "city": "",
       "sourceUrl": "https://psgz.hr/competitions",
+      "note": ""
+    },
+    {
+      "externalId": "hps-unknown-m3-c",
+      "eventDate": "2027-01-17",
+      "endDate": "",
+      "startTime": "",
+      "title": "3. HPS Masters",
+      "organizer": "HPS",
+      "discipline": "classic",
+      "category": "Svi",
+      "venueName": "",
+      "address": "",
+      "city": "Osijek",
+      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-20262027",
       "note": ""
     },
     {
@@ -431,6 +326,21 @@
       "address": "",
       "city": "",
       "sourceUrl": "https://psgz.hr/competitions",
+      "note": ""
+    },
+    {
+      "externalId": "hps-unknown-m4-c",
+      "eventDate": "2027-02-14",
+      "endDate": "",
+      "startTime": "",
+      "title": "4. HPS Masters",
+      "organizer": "HPS",
+      "discipline": "classic",
+      "category": "Svi",
+      "venueName": "Sportska dvorana OŠ Ivana Kozarca",
+      "address": "Ul. dr. Franje Račkog 30, Županja",
+      "city": "Županja",
+      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-20262027",
       "note": ""
     },
     {
@@ -521,6 +431,21 @@
       "address": "",
       "city": "",
       "sourceUrl": "https://psgz.hr/competitions",
+      "note": ""
+    },
+    {
+      "externalId": "hps-unknown-m5-c",
+      "eventDate": "2027-04-18",
+      "endDate": "",
+      "startTime": "",
+      "title": "5. HPS Masters",
+      "organizer": "HPS",
+      "discipline": "classic",
+      "category": "Svi",
+      "venueName": "Sportska dvorana Zemunik",
+      "address": "Ulica XVII 1A, Zemunik Donji",
+      "city": "Zemunik Donji",
+      "sourceUrl": "https://hps-dart.hr/raspored-natjecanja-20262027",
       "note": ""
     }
   ]
