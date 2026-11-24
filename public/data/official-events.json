@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-23T16:01:47.628Z",
+  "generatedAt": "2026-11-24T15:55:42.221Z",
   "sources": [
     {
       "name": "HPS",
@@ -8,9 +8,8 @@
     },
     {
       "name": "PSGZ",
-      "ok": false,
-      "count": 24,
-      "error": "500 https://psgz.hr/site/uniondivision/UnionLeagueTable?unionId=2&seasonId=26&leagueId=863"
+      "ok": true,
+      "count": 24
     }
   ],
   "events": [
